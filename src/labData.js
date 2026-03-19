@@ -1,6 +1,6 @@
 export const labData = {
   title: "CASE 2 — EMPRESA MIMOSA",
-  description: "Reestruturação de infraestrutura Windows Server para a Mimosa Distribuidora Alimentícia. Foco em alta disponibilidade, segurança, organização do AD e auditoria.",
+  description: "🎯 Objetivo: Sua equipe deve reestruturar e fortalecer o ambiente existente da Mimosa, eliminando o ponto único de falha, reorganizando o Active Directory, segmentando o acesso por setor, implementando redundância nos serviços críticos e ativando auditoria. A empresa opera em dois turnos — o planejamento de cada fase deve prever janelas de manutenção fora do horário de pico.",
   network: {
     subnet: "192.168.10.0/24",
     gateway: "192.168.10.1",
@@ -13,25 +13,49 @@ export const labData = {
       name: "Servidor Principal (Atual)",
       hostname: "MIM-DC01",
       os: "Windows Server 2016 Std",
-      ip: "192.168.10.10",
-      disks: "Sistema e Dados",
+      ip: "192.168.10.10 (Estático)",
+      disks: "Sistema (C:) e Dados (D:)",
       role: "AD DS, DNS, DHCP, ERP"
     },
     {
       name: "Servidor Secundário (Novo)",
       hostname: "MIM-DC02",
       os: "Windows Server 2016/2019/2022",
-      ip: "192.168.10.11",
-      disks: "Sistema, Dados (File Server), Logs",
-      role: "DC Adicional, DHCP Failover, File Server"
+      ip: "192.168.10.11 (Estático)",
+      disks: "Sistema (C:), Dados (D:), Logs (E:)",
+      role: "DC Adicional, DHCP Failover, File Server, WEF"
     },
     {
-      name: "Estações de Trabalho",
-      hostname: "MIM-WS-XXX",
+      name: "Estações - Sede (15x)",
+      hostname: "MIM-WS-SDE-01 a 15",
       os: "Windows 10 Pro",
-      ip: "DHCP",
+      ip: "192.168.10.51 a 192.168.10.65 (DHCP)",
       disks: "Padrão",
-      role: "Clientes (Sede, Depósito 1, Depósito 2)"
+      role: "Acesso Geral, Financeiro, RH, Comercial"
+    },
+    {
+      name: "Estações - Depósito 1 (10x)",
+      hostname: "MIM-WS-DP1-01 a 10",
+      os: "Windows 10 Pro",
+      ip: "192.168.10.100 a 192.168.10.109 (DHCP)",
+      disks: "Padrão",
+      role: "Sistema de Estoque, Impressão"
+    },
+    {
+      name: "Estações - Depósito 2 (10x)",
+      hostname: "MIM-WS-DP2-01 a 10",
+      os: "Windows 10 Pro",
+      ip: "192.168.10.150 a 192.168.10.159 (DHCP)",
+      disks: "Padrão",
+      role: "Sistema de Estoque, Impressão"
+    },
+    {
+      name: "Impressoras e Câmeras (Dispositivos)",
+      hostname: "MIM-PRT-01 a 05 / MIM-CAM-01 a 10",
+      os: "Firmware Nativo",
+      ip: "192.168.10.21 a 192.168.10.40 (Reserva DHCP)",
+      disks: "N/A",
+      role: "Impressão de Etiquetas, Monitoramento"
     }
   ],
   deliverables: [
@@ -41,6 +65,30 @@ export const labData = {
     { icon: "🔐", title: "Planejamento de Senhas", desc: "Política de senhas definida e justificada." },
     { icon: "🗂️", title: "Planejamento de OUs", desc: "Estrutura de Unidades Organizacionais no AD." },
     { icon: "💾", title: "Backups Preventivos", desc: "Estratégia de backup antes de qualquer alteração." }
+  ],
+  equipments: [
+    {
+      category: "Servidores & Armazenamento",
+      items: [
+        { name: "Servidor Secundário (Novo)", desc: "Servidor Rack ou Torre (ex: Dell ProLiant DL380 / HP ML350 Gen10) para atuar como DC02 e File Server.", priority: "Alta" },
+        { name: "NAS (Network Attached Storage)", desc: "Equipamento para rotinas de backup local isolado (ex: QNAP ou Synology de 4 baias).", priority: "Alta" },
+        { name: "Nobreak (UPS)", desc: "Nobreak senoidal de 3KVA+ para manter os dois servidores e equipamentos de rede ativos em quedas de energia.", priority: "Crítica" }
+      ]
+    },
+    {
+      category: "Rede & Segurança",
+      items: [
+        { name: "Switches Gerenciáveis (L2/L3)", desc: "Substituir os switches não gerenciáveis por modelos que suportem VLANs (ex: Cisco Aruba ou Ubiquiti) para segregar tráfego.", priority: "Média" },
+        { name: "Firewall / UTM", desc: "Appliance de Firewall (ex: Fortinet, pfSense ou Sophos) para controle de borda, VPN e bloqueio de ameaças externas.", priority: "Alta" }
+      ]
+    },
+    {
+      category: "Licenciamento",
+      items: [
+        { name: "Windows Server 2022 Standard", desc: "Licença para o novo servidor físico (MIM-DC02).", priority: "Crítica" },
+        { name: "Windows Server CALs", desc: "Licenças de Acesso de Cliente (User CAL ou Device CAL) para regularizar os acessos ao novo ambiente.", priority: "Alta" }
+      ]
+    }
   ],
   stages: [
     {

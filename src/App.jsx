@@ -22,7 +22,8 @@ import {
   RotateCcw,
   GraduationCap,
   Zap,
-  FileCheck
+  FileCheck,
+  ShoppingCart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -44,6 +45,7 @@ function App() {
   const [instructionMode, setInstructionMode] = useState({}); // { stepId: 'gui' | 'powershell' }
   const [activeMachineTab, setActiveMachineTab] = useState({}); // { stepId: 'SRV01' }
   const [showQuiz, setShowQuiz] = useState(null); // stageId or null
+  const [showEquipments, setShowEquipments] = useState(false);
 
   // Load state
   useEffect(() => {
@@ -262,6 +264,27 @@ function App() {
                 </div>
               )}
 
+              {/* Equipments Section */}
+              {labData.equipments && (
+                <div className="space-y-2 mt-4">
+                  <button
+                    onClick={() => {
+                      setShowEquipments(true);
+                      if (window.innerWidth < 768) setIsSidebarOpen(false);
+                    }}
+                    className="w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20"
+                  >
+                    <div className="p-2 rounded-lg bg-amber-500/20 group-hover:bg-amber-500/30 transition-colors">
+                      <ShoppingCart className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="block text-sm font-medium truncate">Compras / Melhorias</span>
+                      <span className="text-[10px] opacity-70">Equipamentos sugeridos</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+
               {/* Tools Section */}
               <div className="space-y-2">
                 <p className="px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Ferramentas</p>
@@ -332,15 +355,69 @@ function App() {
         <main className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
           <div className="max-w-4xl mx-auto space-y-8 pb-20">
             
-            {labData.stages.map(stage => (
-              activeStage === stage.id && (
-                <motion.div
-                  key={stage.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className="space-y-8"
-                >
+            {showEquipments ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-3xl font-bold text-amber-400 mb-2 flex items-center gap-3">
+                      <ShoppingCart className="w-8 h-8" />
+                      Sugestões de Compras e Melhorias
+                    </h2>
+                    <p className="text-slate-400">Equipamentos e licenças recomendados para adequar a infraestrutura da Mimosa.</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowEquipments(false)}
+                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors font-medium border border-slate-700"
+                  >
+                    <ArrowRight className="w-4 h-4 rotate-180" />
+                    Voltar ao Lab
+                  </button>
+                </div>
+
+                <div className="grid gap-6">
+                  {labData.equipments.map((category, idx) => (
+                    <div key={idx} className="bg-slate-800/50 rounded-2xl border border-slate-700/50 overflow-hidden">
+                      <div className="p-4 bg-slate-800/80 border-b border-slate-700/50 flex items-center gap-2">
+                        <h3 className="font-semibold text-white">{category.category}</h3>
+                      </div>
+                      <div className="p-5 space-y-4">
+                        {category.items.map((item, i) => (
+                          <div key={i} className="flex flex-col md:flex-row gap-4 p-4 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-slate-600 transition-colors">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-1">
+                                <h4 className="text-lg font-medium text-slate-200">{item.name}</h4>
+                                <span className={cn(
+                                  "px-2 py-0.5 text-[10px] font-bold uppercase rounded-full border",
+                                  item.priority === 'Crítica' ? "bg-red-500/10 text-red-400 border-red-500/20" :
+                                  item.priority === 'Alta' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
+                                  "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                )}>
+                                  Prioridade: {item.priority}
+                                </span>
+                              </div>
+                              <p className="text-sm text-slate-400">{item.desc}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ) : (
+              labData.stages.map(stage => (
+                activeStage === stage.id && (
+                  <motion.div
+                    key={stage.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="space-y-8"
+                  >
                   {/* Stage Header */}
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -658,7 +735,7 @@ function App() {
                   )}
                 </motion.div>
               )
-            ))}
+            )))}
           </div>
         </main>
       </div>
