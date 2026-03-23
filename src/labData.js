@@ -1,35 +1,131 @@
 export const labData = {
   title: "CASE 2 — EMPRESA MIMOSA",
-  description: "🎯 Objetivo: Sua equipe deve reestruturar e fortalecer o ambiente existente da Mimosa, eliminando o ponto único de falha, reorganizando o Active Directory, segmentando o acesso por setor, implementando redundância nos serviços críticos e ativando auditoria. A empresa opera em dois turnos — o planejamento de cada fase deve prever janelas de manutenção fora do horário de pico.",
+  description: "Reestruturação completa da infraestrutura Windows Server, saindo de um ambiente falho e vulnerável para uma solução com 1 servidor e VLANs (segmentação e controle).",
+  executiveSummary: {
+    currentScenario: {
+      title: "Infraestrutura Atual — Ambiente Crítico e Vulnerável",
+      subtitle: "Ambiente funcional, porém sem planejamento, sem redundância e com alto risco de parada total.",
+      company: "Mimosa Distribuidora Alimentícia",
+      employees: 35,
+      locations: "2 depósitos + sede",
+      operation: "18h/dia",
+      dependency: "Dependência total da rede para emissão de notas e estoque."
+    },
+    problems: [
+      { id: "p1", name: "SPOF (Single Point of Failure)", desc: "1 único servidor para todos os serviços (AD, DNS, DHCP, File Server, ERP).", impact: "Qualquer manutenção ou falha derruba toda a empresa.", criticality: "Crítico" },
+      { id: "p2", name: "Active Directory Desorganizado", desc: "Todos os usuários e computadores soltos nas pastas padrão. Sem OUs.", impact: "Impossível aplicar políticas de segurança (GPOs) por setor.", criticality: "Alto" },
+      { id: "p3", name: "File Server Sem Controle", desc: "Pasta única compartilhada sem permissões NTFS ou cotas de disco.", impact: "Vazamento de dados financeiros e disco lotado com arquivos pessoais.", criticality: "Crítico" },
+      { id: "p4", name: "DHCP Mal Configurado", desc: "Distribuição dinâmica para todos, sem reservas para dispositivos fixos.", impact: "Impressoras e câmeras param de funcionar ao reiniciar.", criticality: "Médio" },
+      { id: "p5", name: "Sem Auditoria", desc: "Nenhum log de acesso a arquivos ou alterações no AD habilitado.", impact: "Impossível rastrear a origem de vazamentos de informações.", criticality: "Alto" }
+    ],
+    businessImpact: [
+      "Paradas operacionais (Down-time)",
+      "Perda de produtividade",
+      "Risco iminente de vazamento de dados",
+      "Falta de controle administrativo",
+      "Dependência extrema de uma única máquina física"
+    ],
+    proposedArchitecture: {
+      title: "Infraestrutura Recomendada — Segmentação e Segurança (1 Servidor + VLANs)",
+      servers: [
+        "1 servidor físico robusto (ou 1 host com virtualização)",
+        "AD DS + DNS + DHCP + File Server no mesmo servidor",
+        "ERP preferencialmente isolado em VM no mesmo host (quando possível)"
+      ],
+      network: [
+        "VLANs separadas: Servidores, Sede, Depósito 1, Depósito 2, Dispositivos",
+        "Switch gerenciável (L2) + roteamento inter-VLAN (L3/Firewall/Router)"
+      ],
+      storage: [
+        "File Server organizado hierarquicamente",
+        "Permissões NTFS restritas",
+        "Cotas por usuário/setor habilitadas"
+      ],
+      backup: [
+        "Backup automático diário",
+        "Estratégia 3-2-1 (Local + Nuvem)"
+      ],
+      security: [
+        "GPOs específicas por setor",
+        "Bloqueios de sistema para operação",
+        "Auditoria avançada ativada"
+      ]
+    },
+    spofNote: {
+      title: "Importante: SPOF continua existindo (1 servidor)",
+      text: "A solução com 1 servidor melhora segurança e organização via VLANs, GPOs e permissões, mas não elimina o risco de parada total. Para mitigar, use RAID, nobreak, peças redundantes quando possível e backups 3-2-1 com teste de restore.",
+      mitigations: ["RAID (ex: RAID1/RAID10)", "Nobreak senoidal (UPS)", "Backup diário + regra 3-2-1", "Teste de restore", "Monitoramento básico e documentação"]
+    },
+    adStructure: `ou_mimosa
+  ├── ou_sede
+  │    ├── ou_administrativo
+  │    │    └── ou_diretoria
+  │    ├── ou_financeiro
+  │    ├── ou_rh
+  │    ├── ou_comercial
+  │    └── ou_ti
+  ├── ou_deposito1
+  │    └── ou_operacao1
+  └── ou_deposito2
+       └── ou_operacao2`,
+    namingConvention: {
+      groups: "gpr_<setor> (ex: gpr_financeiro)",
+      gpos: "gpo_<setor> (ex: gpo_bloqueio_usb)"
+    },
+    gposBySector: [
+      { sector: "👔 Diretoria", rules: ["Acesso total", "Sem restrições"] },
+      { sector: "💰 Financeiro / RH", rules: ["Bloquear acesso externo", "Restringir USB", "Auditoria ativa"] },
+      { sector: "📦 Operação (Depósitos)", rules: ["Bloquear painel de controle", "Bloquear rede manual", "Acesso somente ao ERP"] },
+      { sector: "💻 TI", rules: ["Controle total", "Acesso administrativo"] }
+    ],
+    fileServerStructure: `\\\\fileserver\\Dados
+  ├── Diretoria
+  ├── Financeiro
+  ├── RH
+  ├── Comercial
+  ├── TI
+  ├── Operacao_Dep1
+  └── Operacao_Dep2`,
+    dhcpImprovements: [
+      "Criar reservas para Impressoras",
+      "Criar reservas para Câmeras",
+      "Criar reservas para Servidores",
+      "Separar escopos por VLAN"
+    ],
+    auditAndBackup: {
+      audit: ["Logon/logoff", "Acesso a arquivos (Success/Fail)", "Alterações no AD", "Benefício: Rastreabilidade completa"],
+      backup: ["Backup diário automático", "Regra 3-2-1: 3 cópias, 2 mídias, 1 externa"]
+    }
+  },
   network: {
-    subnet: "192.168.10.0/24",
-    gateway: "192.168.10.1",
-    dns: "192.168.10.10 (DC01), 192.168.10.11 (DC02)",
-    reservedRange: "192.168.10.1 - 192.168.10.50 (Servidores e Dispositivos)",
-    dhcpRange: "192.168.10.51 - 192.168.10.200 (Estações)"
+    subnet: "VLAN10 Servidores: 192.168.10.0/24 | VLAN20 Sede: 192.168.20.0/24 | VLAN30 Dep1: 192.168.30.0/24 | VLAN40 Dep2: 192.168.40.0/24 | VLAN50 Dispositivos: 192.168.50.0/24",
+    gateway: "Inter-VLAN: 192.168.10.1 / 20.1 / 30.1 / 40.1 / 50.1",
+    dns: "192.168.10.10 (MIM-DC01)",
+    reservedRange: "VLAN10: 192.168.10.2-10.50 (Infra/Rede) | VLAN50: 192.168.50.10-50.50 (Impressoras/Câmeras)",
+    dhcpRange: "VLAN20: 192.168.20.50-20.199 | VLAN30: 192.168.30.50-30.199 | VLAN40: 192.168.40.50-40.199"
   },
   vms: [
     {
-      name: "Servidor Principal (Atual)",
+      name: "Servidor Único (Solução)",
       hostname: "MIM-DC01",
       os: "Windows Server 2016 Std",
-      ip: "192.168.10.10 (Estático)",
-      disks: "Sistema (C:) e Dados (D:)",
-      role: "AD DS, DNS, DHCP, ERP"
+      ip: "VLAN10: 192.168.10.10 (Estático)",
+      disks: "Sistema (C:) + Dados (D:) + Backups/Logs (E: opcional)",
+      role: "AD DS, DNS, DHCP, File Server, Auditoria, ERP (se necessário)"
     },
     {
-      name: "Servidor Secundário (Novo)",
-      hostname: "MIM-DC02",
-      os: "Windows Server 2016/2019/2022",
-      ip: "192.168.10.11 (Estático)",
-      disks: "Sistema (C:), Dados (D:), Logs (E:)",
-      role: "DC Adicional, DHCP Failover, File Server, WEF"
+      name: "Switch Gerenciável (Infra)",
+      hostname: "SW-MIM-01",
+      os: "Firmware",
+      ip: "VLAN10: 192.168.10.2 (Gerência)",
+      disks: "N/A",
+      role: "VLANs, Trunk, (Inter-VLAN via L3/Router)"
     },
     {
       name: "Estações - Sede (15x)",
       hostname: "MIM-WS-SDE-01 a 15",
       os: "Windows 10 Pro",
-      ip: "192.168.10.51 a 192.168.10.65 (DHCP)",
+      ip: "VLAN20: 192.168.20.51 a 192.168.20.65 (DHCP)",
       disks: "Padrão",
       role: "Acesso Geral, Financeiro, RH, Comercial"
     },
@@ -37,7 +133,7 @@ export const labData = {
       name: "Estações - Depósito 1 (10x)",
       hostname: "MIM-WS-DP1-01 a 10",
       os: "Windows 10 Pro",
-      ip: "192.168.10.100 a 192.168.10.109 (DHCP)",
+      ip: "VLAN30: 192.168.30.100 a 192.168.30.109 (DHCP)",
       disks: "Padrão",
       role: "Sistema de Estoque, Impressão"
     },
@@ -45,7 +141,7 @@ export const labData = {
       name: "Estações - Depósito 2 (10x)",
       hostname: "MIM-WS-DP2-01 a 10",
       os: "Windows 10 Pro",
-      ip: "192.168.10.150 a 192.168.10.159 (DHCP)",
+      ip: "VLAN40: 192.168.40.150 a 192.168.40.159 (DHCP)",
       disks: "Padrão",
       role: "Sistema de Estoque, Impressão"
     },
@@ -53,7 +149,7 @@ export const labData = {
       name: "Impressoras e Câmeras (Dispositivos)",
       hostname: "MIM-PRT-01 a 05 / MIM-CAM-01 a 10",
       os: "Firmware Nativo",
-      ip: "192.168.10.21 a 192.168.10.40 (Reserva DHCP)",
+      ip: "VLAN50: 192.168.50.21 a 192.168.50.40 (Reserva DHCP)",
       disks: "N/A",
       role: "Impressão de Etiquetas, Monitoramento"
     }
@@ -70,122 +166,82 @@ export const labData = {
     {
       category: "Servidores & Armazenamento",
       items: [
-        { name: "Servidor Secundário (Novo)", desc: "Servidor Rack ou Torre (ex: Dell ProLiant DL380 / HP ML350 Gen10) para atuar como DC02 e File Server.", priority: "Alta" },
+        { name: "Servidor Único Robusto", desc: "Servidor Rack ou Torre (ex: Dell/HP) com redundância (RAID, fontes redundantes se possível) para suportar AD/DNS/DHCP/File/ERP.", priority: "Alta" },
         { name: "NAS (Network Attached Storage)", desc: "Equipamento para rotinas de backup local isolado (ex: QNAP ou Synology de 4 baias).", priority: "Alta" },
-        { name: "Nobreak (UPS)", desc: "Nobreak senoidal de 3KVA+ para manter os dois servidores e equipamentos de rede ativos em quedas de energia.", priority: "Crítica" }
+        { name: "Nobreak (UPS)", desc: "Nobreak senoidal de 3KVA+ para manter o servidor e equipamentos de rede ativos em quedas de energia.", priority: "Crítica" }
       ]
     },
     {
       category: "Rede & Segurança",
       items: [
-        { name: "Switches Gerenciáveis (L2/L3)", desc: "Substituir os switches não gerenciáveis por modelos que suportem VLANs (ex: Cisco Aruba ou Ubiquiti) para segregar tráfego.", priority: "Média" },
+        { name: "Switches Gerenciáveis (L2/L3)", desc: "Substituir os switches não gerenciáveis por modelos que suportem VLANs e, se possível, roteamento inter-VLAN.", priority: "Alta" },
         { name: "Firewall / UTM", desc: "Appliance de Firewall (ex: Fortinet, pfSense ou Sophos) para controle de borda, VPN e bloqueio de ameaças externas.", priority: "Alta" }
       ]
     },
     {
       category: "Licenciamento",
       items: [
-        { name: "Windows Server 2022 Standard", desc: "Licença para o novo servidor físico (MIM-DC02).", priority: "Crítica" },
+        { name: "Windows Server 2022 Standard", desc: "Licença para o servidor físico (MIM-DC01) ou para o host de virtualização.", priority: "Crítica" },
         { name: "Windows Server CALs", desc: "Licenças de Acesso de Cliente (User CAL ou Device CAL) para regularizar os acessos ao novo ambiente.", priority: "Alta" }
       ]
     }
   ],
+  topologyDetails: {
+    "old-stations": {
+      title: "Estações (Pré-Lab)",
+      description: "IPs dinâmicos sem controle. Todos misturados no mesmo escopo DHCP.",
+      devices: [
+        { name: "PC-FIN-01", ip: "192.168.10.15 (DHCP)", mac: "00:1A:2B:3C:4D:5E", status: "Online" },
+        { name: "PC-DEP-02", ip: "192.168.10.18 (DHCP)", mac: "00:1A:2B:3C:4D:5F", status: "Online" },
+        { name: "PC-RH-01", ip: "192.168.10.22 (DHCP)", mac: "00:1A:2B:3C:4D:60", status: "Offline" },
+        { name: "PC-DIR-01", ip: "192.168.10.35 (DHCP)", mac: "00:1A:2B:3C:4D:61", status: "Online" }
+      ]
+    },
+    "old-devices": {
+      title: "Impressoras & Câmeras (Pré-Lab)",
+      description: "Dispositivos pegando IPs aleatórios do DHCP. Causa quebra de serviço frequente.",
+      devices: [
+        { name: "IMP-DEP-01", ip: "192.168.10.45 (DHCP - Erro de mapeamento)", mac: "AA:BB:CC:DD:EE:01", status: "Erro" },
+        { name: "CAM-EXT-01", ip: "192.168.10.50 (DHCP)", mac: "AA:BB:CC:DD:EE:02", status: "Online" },
+        { name: "IMP-FIN-01", ip: "192.168.10.12 (DHCP - Conflito)", mac: "AA:BB:CC:DD:EE:03", status: "Conflito IP" }
+      ]
+    },
+    "new-stations": {
+      title: "Estações Organizadas (Solução)",
+      description: "Estações em VLANs separadas (Sede/Depósitos) recebendo IP via DHCP e aplicando GPOs baseadas em OUs.",
+      devices: [
+        { name: "MIM-WS-SDE-01 (Fin)", ip: "VLAN20: 192.168.20.51 (DHCP)", mac: "00:1A:2B:3C:4D:5E", status: "Online - GPO Finanças" },
+        { name: "MIM-WS-DP1-01 (Dep)", ip: "VLAN30: 192.168.30.100 (DHCP)", mac: "00:1A:2B:3C:4D:5F", status: "Online - GPO Bloqueio" },
+        { name: "MIM-WS-DP2-01 (Dep)", ip: "VLAN40: 192.168.40.150 (DHCP)", mac: "00:1A:2B:3C:4D:62", status: "Online - GPO Bloqueio" }
+      ]
+    },
+    "new-devices": {
+      title: "Dispositivos Fixos (Solução)",
+      description: "Impressoras e câmeras em VLAN dedicada com reservas no DHCP. IP nunca muda.",
+      devices: [
+        { name: "MIM-PRT-01 (Depósito)", ip: "VLAN50: 192.168.50.21 (Reservado)", mac: "AA:BB:CC:DD:EE:01", status: "Online - Fixo" },
+        { name: "MIM-CAM-01 (Externa)", ip: "VLAN50: 192.168.50.31 (Reservado)", mac: "AA:BB:CC:DD:EE:02", status: "Online - Fixo" },
+        { name: "MIM-PRT-02 (Financeiro)", ip: "VLAN50: 192.168.50.22 (Reservado)", mac: "AA:BB:CC:DD:EE:03", status: "Online - Fixo" }
+      ]
+    }
+  },
   stages: [
     {
       id: "stage-pre",
-      title: "PRÉ-LAB: Criando o Ambiente Falho (Problema)",
+      title: "Fase 1 — Preparação",
       steps: [
         {
           id: "pre-1",
-          text: "Configuração do Servidor Único (MIM-DC01)",
-          details: "Instale todas as funções (AD, DNS, DHCP, File Server) no mesmo servidor, simulando o ambiente legado e sobrecarregado da Mimosa.",
-          instructions: {
-            "MIM-DC01": [
-              {
-                text: "Instalar Roles Iniciais.",
-                details: [
-                  "Instale Active Directory Domain Services, DHCP Server e File Server."
-                ],
-                command: `Install-WindowsFeature AD-Domain-Services, DHCP, FS-FileServer -IncludeManagementTools`,
-                automation: `# 1. Instalar Roles
-Install-WindowsFeature AD-Domain-Services, DHCP, FS-FileServer -IncludeManagementTools
-Write-Host "Roles instaladas. Prossiga para a promoção do domínio." -ForegroundColor Green`
-              },
-              {
-                text: "Promover a Controlador de Domínio.",
-                details: [
-                  "Crie a nova floresta com o domínio 'mimosa.local'."
-                ],
-                command: `Install-ADDSForest -DomainName "mimosa.local" -InstallDns -Force`,
-              }
-            ]
-          }
-        },
-        {
-          id: "pre-2",
-          text: "Gerar a 'Bagunça' no Active Directory e DHCP",
-          details: "Crie usuários soltos na OU padrão (Users), um DHCP sem reservas e uma pasta pública sem segurança.",
-          instructions: {
-            "MIM-DC01": [
-              {
-                text: "Criar usuários desorganizados.",
-                details: [
-                  "Crie usuários do financeiro, RH e depósito misturados na OU 'Users'."
-                ],
-                command: `# Criando usuários na OU padrão (Bagunça)
-$Users = @("joao.financeiro", "maria.rh", "carlos.deposito", "ana.diretoria")
-foreach ($user in $Users) {
-    New-ADUser -Name $user -SamAccountName $user -UserPrincipalName "$user@mimosa.local" -Path "CN=Users,DC=mimosa,DC=local" -AccountPassword (ConvertTo-SecureString "Senha123!" -AsPlainText -Force) -Enabled $true
-}`
-              },
-              {
-                text: "Criar DHCP Falho.",
-                details: [
-                  "Crie um escopo único (192.168.10.1 a 192.168.10.254) que mistura servidores, câmeras e estações."
-                ],
-                command: `# DHCP sem exclusões (Tudo misturado)
-Add-DhcpServerInDC -DnsName "MIM-DC01.mimosa.local" -IPAddress 192.168.10.10
-Add-DhcpServerv4Scope -Name "Rede-Mimosa-Geral" -StartRange 192.168.10.1 -EndRange 192.168.10.254 -SubnetMask 255.255.255.0
-Set-DhcpServerv4OptionValue -ScopeId 192.168.10.0 -OptionId 6 -Value 192.168.10.10
-Set-DhcpServerv4OptionValue -ScopeId 192.168.10.0 -OptionId 3 -Value 192.168.10.1`
-              },
-              {
-                text: "Criar File Server Inseguro.",
-                details: [
-                  "Crie uma pasta 'Compartilhado' com permissão total para todos, onde filmes e planilhas confidenciais se misturam."
-                ],
-                command: `New-Item -Path "C:\\Compartilhado" -ItemType Directory -Force
-New-SmbShare -Name "Compartilhado" -Path "C:\\Compartilhado" -FullAccess "Everyone"`
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      id: "stage-0",
-      title: "SOLUÇÃO: Entregáveis e Planejamento",
-      steps: [
-        {
-          id: "s0-1",
-          text: "Documentação Inicial",
-          details: "Prepare todos os documentos de planejamento antes de tocar no servidor.",
+          text: "Levantamento e Planejamento",
+          details: "Mapeie todo o ambiente atual antes de qualquer alteração.",
+          hint: "Não comece a mexer sem ter a tabela de IPs e a lista de usuários em mãos.",
           instructions: {
             "Equipe": [
               {
-                text: "Crie a Planilha de Planejamento de IPs.",
+                text: "Levantamento de Ativos",
                 details: [
-                  "Defina o range para servidores (ex: .10 a .20).",
-                  "Defina o range para impressoras e câmeras (ex: .21 a .50).",
-                  "Defina o range de DHCP para estações (ex: .51 a .200)."
-                ]
-              },
-              {
-                text: "Desenhe a Estrutura de OUs e Grupos.",
-                details: [
-                  "Sede: Administrativo, Financeiro, RH, Comercial, TI.",
-                  "Depósitos: Depósito 1, Depósito 2.",
-                  "Crie grupos globais correspondentes (ex: GG_Financeiro_RW)."
+                  "Liste todos os 35 computadores, 5 impressoras e câmeras.",
+                  "Defina a janela de manutenção (fora das 18h de operação)."
                 ]
               }
             ]
@@ -195,55 +251,33 @@ New-SmbShare -Name "Compartilhado" -Path "C:\\Compartilhado" -FullAccess "Everyo
     },
     {
       id: "stage-1",
-      title: "SOLUÇÃO (Fase 1) — Reorganização do AD e Estabilização",
+      title: "Fase 2 — Infraestrutura",
       steps: [
         {
           id: "s1-1",
-          text: "Backup do Estado do Sistema (System State)",
-          details: "Realize o backup antes de alterar o AD.",
+          text: "Instalar Servidor Único (MIM-DC01)",
+          details: "Instale o Windows Server e configure IP estático na VLAN de Servidores.",
           instructions: {
             "MIM-DC01": [
               {
-                text: "Instale o Windows Server Backup e execute o backup.",
-                details: ["Faça backup do System State para um disco local dedicado ou compartilhamento seguro."],
-                command: `Install-WindowsFeature Windows-Server-Backup
-wbadmin start systemstatebackup -backupTarget:E:`
+                text: "Configuração Básica",
+                details: ["Nome: MIM-DC01", "VLAN10 IP: 192.168.10.10/24", "DNS: 192.168.10.10 (self)"],
+                command: `Rename-Computer -NewName "MIM-DC01" -Restart`
               }
             ]
           }
         },
         {
           id: "s1-2",
-          text: "Criar Estrutura de OUs e Grupos",
-          details: "Tire os usuários do contêiner padrão 'Users'.",
+          text: "Instalar Roles e Criar Domínio",
+          details: "Instale AD DS/DNS/DHCP/File Server e promova o servidor para o domínio mimosa.local.",
           instructions: {
             "MIM-DC01": [
               {
-                text: "Crie OUs por Setor.",
-                details: ["Mimosa > Sede > Financeiro", "Mimosa > Depositos > Deposito1"],
-                command: `New-ADOrganizationalUnit -Name "Mimosa" -Path "DC=mimosa,DC=local"
-New-ADOrganizationalUnit -Name "Sede" -Path "OU=Mimosa,DC=mimosa,DC=local"
-New-ADOrganizationalUnit -Name "Financeiro" -Path "OU=Sede,OU=Mimosa,DC=mimosa,DC=local"
-New-ADGroup -Name "GG_Financeiro" -GroupCategory Security -GroupScope Global -Path "OU=Financeiro,OU=Sede,OU=Mimosa,DC=mimosa,DC=local"`
-              }
-            ]
-          }
-        },
-        {
-          id: "s1-3",
-          text: "Reservas de DHCP e Reorganização do File Server",
-          details: "Fixar IPs de dispositivos e criar pastas por setor.",
-          instructions: {
-            "MIM-DC01": [
-              {
-                text: "Configurar Reservas DHCP.",
-                details: ["Acesse o DHCP e crie reservas para as 5 impressoras usando seus MAC Addresses."]
-              },
-              {
-                text: "Criar pastas no File Server.",
-                details: ["Crie pastas separadas dentro de \\\\servidor\\Compartilhado (ex: Financeiro, RH, Depositos)."],
-                command: `New-Item -Path "C:\\Compartilhado\\Financeiro" -ItemType Directory
-New-Item -Path "C:\\Compartilhado\\Depositos" -ItemType Directory`
+                text: "Instalar Roles e Promover Floresta",
+                details: ["Crie a floresta do domínio e habilite o DNS integrado."],
+                command: `Install-WindowsFeature AD-Domain-Services, DNS, DHCP, FS-FileServer -IncludeManagementTools
+Install-ADDSForest -DomainName "mimosa.local" -InstallDns -Force`
               }
             ]
           }
@@ -252,45 +286,34 @@ New-Item -Path "C:\\Compartilhado\\Depositos" -ItemType Directory`
     },
     {
       id: "stage-2",
-      title: "SOLUÇÃO (Fase 2) — Controle de Acesso e Políticas",
+      title: "Fase 3 — Active Directory (AD)",
       steps: [
         {
           id: "s2-1",
-          text: "Permissões NTFS e Quebra de Herança",
-          details: "Proteger as pastas do Financeiro e RH.",
+          text: "Criar OUs e Grupos",
+          details: "Estruture o AD conforme o organograma da Mimosa.",
+          hint: "Crie a estrutura completa de OUs antes de mover os usuários para evitar perdas.",
           instructions: {
             "MIM-DC01": [
               {
-                text: "Configurar permissões na pasta Financeiro.",
-                details: [
-                  "Propriedades > Segurança > Avançado.",
-                  "Desabilitar herança.",
-                  "Remover 'Users'.",
-                  "Adicionar o grupo 'GG_Financeiro' com permissão de Modificação."
-                ]
+                text: "Criar OU Raiz e Sub-OUs",
+                details: ["Crie OU_Mimosa, OU_Sede, OU_Deposito1, etc.", "Crie os grupos GPR_Financeiro, GPR_RH, etc."],
+                command: `New-ADOrganizationalUnit -Name "OU_Mimosa" -Path "DC=mimosa,DC=local"
+New-ADGroup -Name "GPR_Financeiro" -GroupCategory Security -GroupScope Global -Path "OU=Financeiro,OU=Sede,OU=Mimosa,DC=mimosa,DC=local"`
               }
             ]
           }
         },
         {
           id: "s2-2",
-          text: "GPOs por Setor e Mapeamento de Unidade",
-          details: "Restringir painel de controle e mapear pastas.",
+          text: "Aplicar GPOs",
+          details: "Crie e vincule as políticas de segurança.",
           instructions: {
             "MIM-DC01": [
               {
-                text: "Criar GPO para Operadores de Depósito.",
-                details: [
-                  "Linkar GPO na OU 'Depositos'.",
-                  "User Config > Policies > Admin Templates > Control Panel > Prohibit access to Control Panel and PC settings."
-                ]
-              },
-              {
-                text: "Mapeamento Automático.",
-                details: [
-                  "User Config > Preferences > Windows Settings > Drive Maps.",
-                  "Mapear \\\\MIM-DC01\\Compartilhado\\Financeiro (Item Level Targeting para o grupo GG_Financeiro)."
-                ]
+                text: "GPO de Bloqueio para Depósitos",
+                details: ["Bloqueie o Painel de Controle para as OUs de Depósito."],
+                command: `New-GPO -Name "GPO_Bloqueio_Painel"`
               }
             ]
           }
@@ -299,54 +322,32 @@ New-Item -Path "C:\\Compartilhado\\Depositos" -ItemType Directory`
     },
     {
       id: "stage-3",
-      title: "SOLUÇÃO (Fase 3) — Alta Disponibilidade (Avançado)",
+      title: "Fase 4 — File Server",
       steps: [
         {
           id: "s3-1",
-          text: "Promover Segundo Controlador de Domínio (MIM-DC02)",
-          details: "Eliminar o SPOF do Active Directory.",
+          text: "Criar Estrutura e Migrar Dados",
+          details: "Prepare o File Server no MIM-DC01 (organizado por setor).",
           instructions: {
-            "MIM-DC02": [
+            "MIM-DC01": [
               {
-                text: "Instalar AD DS e promover a DC.",
-                details: ["Adicionar ao domínio existente 'mimosa.local'."],
-                command: `Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
-Install-ADDSDomainController -DomainName "mimosa.local" -InstallDns`
+                text: "Criar Pastas Departamentais",
+                details: ["Crie as pastas Financeiro, RH, Comercial, etc., no disco D:."],
+                command: `New-Item -Path "D:\\Dados\\Financeiro" -ItemType Directory`
               }
             ]
           }
         },
         {
           id: "s3-2",
-          text: "DHCP Failover e Segundo Escopo",
-          details: "Garantir distribuição de IPs se o DC01 cair.",
+          text: "Aplicar Permissões NTFS",
+          details: "Quebre a herança e restrinja acessos.",
+          hint: "Sempre dê permissão para o Grupo, nunca para o Usuário individualmente.",
           instructions: {
             "MIM-DC01": [
               {
-                text: "Configurar Failover (Hot Standby).",
-                details: [
-                  "Botão direito no escopo IPv4 > Configure Failover.",
-                  "Partner Server: MIM-DC02.",
-                  "Mode: Hot Standby (MIM-DC01 como Active)."
-                ],
-                command: `Add-DhcpServerv4Failover -ComputerName "MIM-DC01" -Name "Mimosa-Failover" -PartnerServer "MIM-DC02" -ScopeId 192.168.10.0 -Mode HotStandby -Role Active`
-              }
-            ]
-          }
-        },
-        {
-          id: "s3-3",
-          text: "Migrar File Server e Ativar ABE",
-          details: "Mover arquivos para o DC02 e esconder pastas sem acesso.",
-          instructions: {
-            "MIM-DC02": [
-              {
-                text: "Configurar Compartilhamento com ABE.",
-                details: [
-                  "Server Manager > File and Storage Services > Shares.",
-                  "Criar novo share e marcar 'Enable access-based enumeration'."
-                ],
-                command: `New-SmbShare -Name "Dados" -Path "D:\\Dados" -FolderEnumerationMode AccessBased`
+                text: "Restringir pasta Financeiro",
+                details: ["Desabilite herança e dê permissão apenas para GPR_Financeiro e System."]
               }
             ]
           }
@@ -355,41 +356,144 @@ Install-ADDSDomainController -DomainName "mimosa.local" -InstallDns`
     },
     {
       id: "stage-4",
-      title: "SOLUÇÃO (Fase 4) — Auditoria e Conformidade (Avançado+)",
+      title: "Fase 5 — Rede (DHCP)",
       steps: [
         {
           id: "s4-1",
-          text: "Configurar Auditoria de Acesso a Objetos",
-          details: "Rastrear quem acessa as planilhas financeiras.",
+          text: "Configurar DHCP para VLANs",
+          details: "Crie escopos separados por VLAN (Sede/Depósitos) e configure as opções.",
+          hint: "Para DHCP funcionar em VLANs diferentes, o roteador/switch L3 precisa ter DHCP Relay (ip helper-address) apontando para 192.168.10.10.",
           instructions: {
             "MIM-DC01": [
               {
-                text: "Ativar Auditoria via GPO.",
-                details: [
-                  "Computer Config > Policies > Windows Settings > Security Settings > Advanced Audit Policy > Object Access.",
-                  "Audit File System: Success e Failure."
-                ]
-              },
-              {
-                text: "Configurar Auditoria na Pasta (SACL).",
-                details: [
-                  "Propriedades da pasta Financeiro > Segurança > Avançado > Auditing.",
-                  "Adicionar 'Everyone', Type: All, Permissions: Full Control."
-                ]
+                text: "Criar Escopos por VLAN",
+                details: ["VLAN20: 192.168.20.0/24", "VLAN30: 192.168.30.0/24", "VLAN40: 192.168.40.0/24"],
+                command: `Add-DhcpServerInDC -DnsName "MIM-DC01.mimosa.local" -IPAddress 192.168.10.10
+Add-DhcpServerv4Scope -Name "VLAN20-SEDE" -StartRange 192.168.20.50 -EndRange 192.168.20.199 -SubnetMask 255.255.255.0
+Add-DhcpServerv4Scope -Name "VLAN30-DEP1" -StartRange 192.168.30.50 -EndRange 192.168.30.199 -SubnetMask 255.255.255.0
+Add-DhcpServerv4Scope -Name "VLAN40-DEP2" -StartRange 192.168.40.50 -EndRange 192.168.40.199 -SubnetMask 255.255.255.0
+Set-DhcpServerv4OptionValue -ScopeId 192.168.20.0 -DnsServer 192.168.10.10 -Router 192.168.20.1
+Set-DhcpServerv4OptionValue -ScopeId 192.168.30.0 -DnsServer 192.168.10.10 -Router 192.168.30.1
+Set-DhcpServerv4OptionValue -ScopeId 192.168.40.0 -DnsServer 192.168.10.10 -Router 192.168.40.1`
               }
             ]
           }
         },
         {
           id: "s4-2",
-          text: "Centralização de Logs (WEF)",
-          details: "Encaminhar logs de segurança para um servidor central.",
+          text: "Criar Reservas",
+          details: "Fixe os IPs das câmeras e impressoras na VLAN de Dispositivos.",
           instructions: {
-            "MIM-DC02": [
+            "MIM-DC01": [
               {
-                text: "Configurar o Collector.",
-                details: ["Iniciar o serviço WinRM e criar uma Subscription do tipo Collector Initiated."],
-                command: `wecutil qc`
+                text: "Reservas MAC",
+                details: ["Crie o escopo VLAN50 (Dispositivos) e cadastre reservas para impressoras/câmeras."],
+                command: `Add-DhcpServerv4Scope -Name "VLAN50-DISPOSITIVOS" -StartRange 192.168.50.50 -EndRange 192.168.50.199 -SubnetMask 255.255.255.0
+Set-DhcpServerv4OptionValue -ScopeId 192.168.50.0 -DnsServer 192.168.10.10 -Router 192.168.50.1`
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      id: "stage-5",
+      title: "Fase 6 — Segurança",
+      steps: [
+        {
+          id: "s5-1",
+          text: "Ativar Auditoria",
+          details: "Rastreie acessos e alterações críticas.",
+          instructions: {
+            "MIM-DC01": [
+              {
+                text: "Auditoria de Logon e Arquivos",
+                details: ["Habilite via GPO a auditoria de Object Access (Sucesso e Falha)."]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      id: "stage-6",
+      title: "Fase 7 — Backup",
+      steps: [
+        {
+          id: "s6-1",
+          text: "Automatizar e Testar Restore",
+          details: "Implemente a regra 3-2-1.",
+          hint: "Um backup não testado não é um backup. Faça um restore de um arquivo de teste.",
+          instructions: {
+            "MIM-DC01": [
+              {
+                text: "Agendar Backup Diário",
+                details: ["Use o Windows Server Backup para agendar cópias diárias para o NAS/Disco Externo."]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      id: "stage-rollback",
+      title: "EXTRAS: Scripts de Limpeza (Rollback)",
+      steps: [
+        {
+          id: "rb-1",
+          text: "Limpar Estrutura do AD e DHCP",
+          details: "Remove os usuários, OUs e escopos DHCP criados durante o lab para que você possa tentar novamente do zero.",
+          instructions: {
+            "MIM-DC01": [
+              {
+                text: "Remover usuários de teste.",
+                details: ["Ajuste os logins conforme os usuários criados no seu ambiente."],
+                command: `$Users = @(
+  "joao.financeiro",
+  "maria.rh",
+  "carlos.deposito",
+  "ana.diretoria"
+)
+foreach ($user in $Users) {
+  Remove-ADUser -Identity $user -Confirm:$false -ErrorAction SilentlyContinue
+}
+Write-Host "Usuários removidos." -ForegroundColor Green`
+              },
+              {
+                text: "Remover OUs criadas no lab.",
+                details: ["Apaga a OU raiz OU_Mimosa e tudo dentro dela."],
+                command: `Remove-ADOrganizationalUnit -Identity "OU=OU_Mimosa,DC=mimosa,DC=local" -Recursive -Confirm:$false -ErrorAction SilentlyContinue
+Write-Host "Estrutura de OUs removida." -ForegroundColor Green`
+              },
+              {
+                text: "Remover Escopo DHCP.",
+                details: ["Remove o escopo principal."],
+                command: `Remove-DhcpServerv4Scope -ScopeId 192.168.10.0 -Force -ErrorAction SilentlyContinue
+Write-Host "Escopo DHCP removido." -ForegroundColor Green`
+              },
+              {
+                text: "Remover Compartilhamentos e Pastas.",
+                details: ["Remove a pasta C:\\Compartilhado e os shares."],
+                command: `Remove-SmbShare -Name "Compartilhado" -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "C:\\Compartilhado" -Recurse -Force -ErrorAction SilentlyContinue
+Write-Host "Pastas e compartilhamentos removidos." -ForegroundColor Green`
+              }
+            ]
+          }
+        },
+        {
+          id: "rb-2",
+          text: "Remover Escopos e Reservas das VLANs",
+          details: "Desfaz a segmentação do DHCP (escopos por VLAN) criada no lab.",
+          instructions: {
+            "MIM-DC01": [
+              {
+                text: "Remover escopos VLAN20/30/40/50.",
+                details: ["Remove os escopos DHCP criados para segmentação."],
+                command: `Remove-DhcpServerv4Scope -ScopeId 192.168.20.0 -Force -ErrorAction SilentlyContinue
+Remove-DhcpServerv4Scope -ScopeId 192.168.30.0 -Force -ErrorAction SilentlyContinue
+Remove-DhcpServerv4Scope -ScopeId 192.168.40.0 -Force -ErrorAction SilentlyContinue
+Remove-DhcpServerv4Scope -ScopeId 192.168.50.0 -Force -ErrorAction SilentlyContinue`
               }
             ]
           }

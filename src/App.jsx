@@ -23,7 +23,18 @@ import {
   GraduationCap,
   Zap,
   FileCheck,
-  ShoppingCart
+  ShoppingCart,
+  Network as NetworkIcon,
+  Lightbulb,
+  FileSpreadsheet,
+  Image as ImageIcon,
+  Building2,
+  AlertTriangle,
+  TrendingDown,
+  ShieldCheck,
+  Users,
+  FolderTree,
+  Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -46,6 +57,11 @@ function App() {
   const [activeMachineTab, setActiveMachineTab] = useState({}); // { stepId: 'SRV01' }
   const [showQuiz, setShowQuiz] = useState(null); // stageId or null
   const [showEquipments, setShowEquipments] = useState(false);
+  const [showDiagram, setShowDiagram] = useState(false);
+  const [showOverview, setShowOverview] = useState(true); // New state for Executive Overview
+  const [activeDeviceModal, setActiveDeviceModal] = useState(null); // 'old-stations', 'old-devices', 'new-stations', 'new-devices'
+  const [visibleHints, setVisibleHints] = useState({}); // { stepId: true/false }
+  const [zoomedImage, setZoomedImage] = useState(null); // url of the image to zoom
 
   // Load state
   useEffect(() => {
@@ -143,6 +159,39 @@ function App() {
     }
   };
 
+  const downloadTemplate = (type) => {
+    let content = '';
+    let filename = '';
+
+    if (type === 'ips') {
+      content = "Dispositivo,Hostname,IP,MAC Address,Status/Reserva\nServidor Principal,,192.168.10.10,,\nServidor Secundário,,192.168.10.11,,\nImpressora Sede,,,,";
+      filename = "planejamento_ips_mimosa.csv";
+    } else if (type === 'usuarios') {
+      content = "Nome,Sobrenome,Setor,Cargo,Login,Grupo Principal\nJoão,Silva,Financeiro,Analista,joao.silva,GG_Financeiro\nMaria,Souza,RH,Gerente,maria.souza,GG_RH";
+      filename = "planejamento_usuarios_mimosa.csv";
+    }
+
+    if (content && filename) {
+      const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast.success(`Template ${filename} baixado!`);
+    }
+  };
+
+  const toggleHint = (stepId, e) => {
+    e?.stopPropagation();
+    setVisibleHints(prev => ({
+      ...prev,
+      [stepId]: !prev[stepId]
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex overflow-hidden font-sans selection:bg-indigo-500 selection:text-white">
       <Toaster richColors position="top-right" theme="dark" />
@@ -155,6 +204,41 @@ function App() {
             quizData={labData.stages.find(s => s.id === showQuiz)?.quiz} 
             onClose={() => setShowQuiz(null)} 
           />
+        )}
+      </AnimatePresence>
+
+      {/* Device Details Modal */}
+      <AnimatePresence>
+        {activeDeviceModal && (
+          <DeviceDetailsModal 
+            modalType={activeDeviceModal} 
+            onClose={() => setActiveDeviceModal(null)} 
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Image Zoom Modal */}
+      <AnimatePresence>
+        {zoomedImage && (
+          <div 
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md cursor-zoom-out"
+            onClick={() => setZoomedImage(null)}
+          >
+            <motion.img 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              src={zoomedImage} 
+              alt="Zoomed" 
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl border border-slate-700"
+            />
+            <button 
+              className="absolute top-4 right-4 p-2 bg-slate-800/50 hover:bg-slate-700 rounded-full text-white transition-colors"
+              onClick={(e) => { e.stopPropagation(); setZoomedImage(null); }}
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         )}
       </AnimatePresence>
 
@@ -201,18 +285,55 @@ function App() {
                 </div>
               </div>
 
+              {/* Overview Button */}
+              <div className="space-y-2 mb-4">
+                <button
+                  onClick={() => {
+                    setShowOverview(true);
+                    setShowDiagram(false);
+                    setShowEquipments(false);
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden",
+                    showOverview 
+                      ? "bg-indigo-600 shadow-lg shadow-indigo-500/20 text-white" 
+                      : "hover:bg-slate-700/50 text-slate-400 hover:text-slate-200"
+                  )}
+                >
+                  <div className={cn(
+                    "p-2 rounded-lg transition-colors",
+                    showOverview ? "bg-white/20" : "bg-slate-800 group-hover:bg-slate-700"
+                  )}>
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-sm font-medium truncate">Visão Executiva</span>
+                    <span className="text-[10px] opacity-70">O problema e a solução</span>
+                  </div>
+                </button>
+              </div>
+
               {/* Navigation */}
               <nav className="space-y-1">
-                <p className="px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Etapas</p>
+                <p className="px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Mão na Massa (Lab)</p>
                 {labData.stages.map(stage => {
-                  const isActive = activeStage === stage.id;
+                  if (stage.id === 'stage-rollback') return null;
+
+                  const isActive = activeStage === stage.id && !showEquipments && !showDiagram && !showOverview;
                   const progress = calculateProgress(stage.id);
                   const isCompleted = progress === 100;
 
                   return (
                     <button
                       key={stage.id}
-                      onClick={() => setActiveStage(stage.id)}
+                      onClick={() => {
+                        setActiveStage(stage.id);
+                        setShowOverview(false);
+                        setShowEquipments(false);
+                        setShowDiagram(false);
+                        if (window.innerWidth < 768) setIsSidebarOpen(false);
+                      }}
                       className={cn(
                         "w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden",
                         isActive 
@@ -242,6 +363,34 @@ function App() {
                     </button>
                   );
                 })}
+                {labData.stages.filter(s => s.id === 'stage-rollback').map(stage => {
+                  const isActive = activeStage === stage.id && !showEquipments && !showDiagram && !showOverview;
+                  return (
+                    <button
+                      key={stage.id}
+                      onClick={() => {
+                        setActiveStage(stage.id);
+                        setShowOverview(false);
+                        setShowEquipments(false);
+                        setShowDiagram(false);
+                        if (window.innerWidth < 768) setIsSidebarOpen(false);
+                      }}
+                      className={cn(
+                        "w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden mt-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20",
+                        isActive && "ring-1 ring-red-500"
+                      )}
+                    >
+                      <div className="p-2 rounded-lg bg-red-500/20 group-hover:bg-red-500/30 transition-colors">
+                        <RotateCcw className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="block text-sm font-medium truncate">Scripts de Limpeza</span>
+                        <span className="text-[10px] opacity-70">Desfazer Lab</span>
+                      </div>
+                    </button>
+                  );
+                })}
+
               </nav>
 
               {/* Deliverables Section */}
@@ -252,17 +401,49 @@ function App() {
                   </p>
                   <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 space-y-3">
                     {labData.deliverables.map((item, idx) => (
-                      <div key={idx} className="flex gap-3 items-start group">
-                        <span className="text-lg bg-slate-800 p-1.5 rounded-lg border border-slate-700 group-hover:border-indigo-500/50 transition-colors shadow-sm">{item.icon}</span>
-                        <div>
-                          <h4 className="text-sm font-medium text-slate-200 group-hover:text-indigo-300 transition-colors">{item.title}</h4>
-                          <p className="text-[10px] text-slate-400 leading-tight mt-0.5">{item.desc}</p>
+                      <div key={idx} className="flex flex-col gap-2 p-2 bg-slate-900/30 rounded-lg border border-slate-700/30">
+                        <div className="flex gap-3 items-start group">
+                          <span className="text-lg bg-slate-800 p-1.5 rounded-lg border border-slate-700 group-hover:border-indigo-500/50 transition-colors shadow-sm">{item.icon}</span>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-medium text-slate-200 group-hover:text-indigo-300 transition-colors">{item.title}</h4>
+                            <p className="text-[10px] text-slate-400 leading-tight mt-0.5">{item.desc}</p>
+                          </div>
                         </div>
+                        {(item.title.includes('IPs') || item.title.includes('Usuários')) && (
+                          <button
+                            onClick={() => downloadTemplate(item.title.includes('IPs') ? 'ips' : 'usuarios')}
+                            className="ml-11 flex items-center gap-1.5 text-[10px] bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded w-fit border border-indigo-500/20 transition-colors"
+                          >
+                            <FileSpreadsheet className="w-3 h-3" />
+                            Baixar Template
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
+
+              {/* Diagram Section */}
+              <div className="space-y-2 mt-4">
+                <button
+                    onClick={() => {
+                      setShowDiagram(true);
+                      setShowOverview(false);
+                      setShowEquipments(false);
+                      if (window.innerWidth < 768) setIsSidebarOpen(false);
+                    }}
+                  className="w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20"
+                >
+                  <div className="p-2 rounded-lg bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
+                    <NetworkIcon className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-sm font-medium truncate">Topologia de Rede</span>
+                    <span className="text-[10px] opacity-70">Antes / Depois</span>
+                  </div>
+                </button>
+              </div>
 
               {/* Equipments Section */}
               {labData.equipments && (
@@ -270,6 +451,8 @@ function App() {
                   <button
                     onClick={() => {
                       setShowEquipments(true);
+                      setShowDiagram(false);
+                      setShowOverview(false);
                       if (window.innerWidth < 768) setIsSidebarOpen(false);
                     }}
                     className="w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20"
@@ -355,7 +538,414 @@ function App() {
         <main className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
           <div className="max-w-4xl mx-auto space-y-8 pb-20">
             
-            {showEquipments ? (
+            {showOverview ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-12"
+              >
+                {/* Hero Section */}
+                <div className="bg-slate-800/40 border border-slate-700/50 rounded-3xl p-8 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl" />
+                  <div className="relative z-10">
+                    <span className="text-indigo-400 font-bold tracking-wider text-sm mb-2 block">CENÁRIO ATUAL</span>
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
+                      {labData.executiveSummary.currentScenario.title}
+                    </h1>
+                    <p className="text-xl text-slate-300 mb-8 max-w-2xl">
+                      {labData.executiveSummary.currentScenario.subtitle}
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
+                        <Building2 className="w-6 h-6 text-indigo-400 mb-2" />
+                        <div className="text-sm text-slate-400">Empresa</div>
+                        <div className="font-semibold text-white">{labData.executiveSummary.currentScenario.company}</div>
+                      </div>
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
+                        <Users className="w-6 h-6 text-blue-400 mb-2" />
+                        <div className="text-sm text-slate-400">Colaboradores</div>
+                        <div className="font-semibold text-white">{labData.executiveSummary.currentScenario.employees}</div>
+                      </div>
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
+                        <FolderTree className="w-6 h-6 text-emerald-400 mb-2" />
+                        <div className="text-sm text-slate-400">Locais</div>
+                        <div className="font-semibold text-white">{labData.executiveSummary.currentScenario.locations}</div>
+                      </div>
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
+                        <AlertTriangle className="w-6 h-6 text-amber-400 mb-2" />
+                        <div className="text-sm text-slate-400">Operação</div>
+                        <div className="font-semibold text-white">{labData.executiveSummary.currentScenario.operation}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Problems Section */}
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <AlertTriangle className="w-6 h-6 text-red-500" />
+                    Problemas Identificados
+                  </h2>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {labData.executiveSummary.problems.map((prob) => (
+                      <div key={prob.id} className="bg-slate-800/30 border border-slate-700/50 p-5 rounded-2xl hover:border-red-500/30 transition-colors">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-bold text-red-400">{prob.name}</h3>
+                          <span className={cn(
+                            "text-[10px] px-2 py-1 rounded font-bold uppercase",
+                            prob.criticality === 'Crítico' ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/20 text-amber-300'
+                          )}>{prob.criticality}</span>
+                        </div>
+                        <p className="text-sm text-slate-300 mb-3">{prob.desc}</p>
+                        <div className="text-xs bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+                          <span className="text-slate-500 block mb-1">Consequência Operacional:</span>
+                          <span className="text-slate-300">{prob.impact}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Impact */}
+                <div className="bg-gradient-to-br from-slate-900 to-red-950/20 border border-red-900/30 p-6 rounded-2xl">
+                  <h2 className="text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
+                    <TrendingDown className="w-5 h-5" /> Impacto no Negócio
+                  </h2>
+                  <ul className="grid sm:grid-cols-2 gap-3">
+                    {labData.executiveSummary.businessImpact.map((impact, i) => (
+                      <li key={i} className="flex items-center gap-2 text-slate-300 text-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                        {impact}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Proposed Architecture */}
+                <div className="bg-slate-800/50 border border-indigo-500/30 rounded-3xl p-8">
+                  <div className="flex items-center gap-3 mb-8">
+                    <ShieldCheck className="w-8 h-8 text-indigo-400" />
+                    <div>
+                      <span className="text-indigo-400 font-bold tracking-wider text-xs block mb-1">NOVA ARQUITETURA PROPOSTA</span>
+                      <h2 className="text-2xl font-bold text-white">
+                        {labData.executiveSummary.proposedArchitecture.title}
+                      </h2>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="space-y-4">
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 h-full">
+                        <h4 className="font-bold text-indigo-300 mb-3 flex items-center gap-2"><Server className="w-4 h-4"/> Servidores</h4>
+                        <ul className="space-y-2 text-sm text-slate-400">
+                          {labData.executiveSummary.proposedArchitecture.servers.map((item, i) => <li key={i}>• {item}</li>)}
+                        </ul>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 h-full">
+                        <h4 className="font-bold text-emerald-300 mb-3 flex items-center gap-2"><NetworkIcon className="w-4 h-4"/> Rede</h4>
+                        <ul className="space-y-2 text-sm text-slate-400">
+                          {labData.executiveSummary.proposedArchitecture.network.map((item, i) => <li key={i}>• {item}</li>)}
+                        </ul>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 h-full">
+                        <h4 className="font-bold text-amber-300 mb-3 flex items-center gap-2"><Lock className="w-4 h-4"/> Segurança & Dados</h4>
+                        <ul className="space-y-2 text-sm text-slate-400">
+                          {labData.executiveSummary.proposedArchitecture.security.map((item, i) => <li key={i}>• {item}</li>)}
+                          {labData.executiveSummary.proposedArchitecture.storage.map((item, i) => <li key={i}>• {item}</li>)}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {labData.executiveSummary.spofNote && (
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="w-6 h-6 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-amber-300 mb-2">{labData.executiveSummary.spofNote.title}</h3>
+                        <p className="text-sm text-amber-200/80 mb-4">{labData.executiveSummary.spofNote.text}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {labData.executiveSummary.spofNote.mitigations.map((item, i) => (
+                            <span key={i} className="text-[10px] px-2 py-1 rounded-full bg-slate-900/50 border border-slate-700/50 text-slate-200">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-6">
+                  <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <FolderTree className="w-5 h-5 text-emerald-400" />
+                    Estrutura do Active Directory
+                  </h2>
+                  <div className="rounded-xl overflow-hidden border border-slate-700/50">
+                    <SyntaxHighlighter
+                      language="text"
+                      style={vscDarkPlus}
+                      customStyle={{ margin: 0, padding: '1rem', background: '#020617', fontSize: '0.75rem' }}
+                    >
+                      {labData.executiveSummary.adStructure}
+                    </SyntaxHighlighter>
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 gap-3">
+                    <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">
+                      <div className="text-xs text-slate-500 mb-1">Padrão de Grupos</div>
+                      <div className="text-sm text-slate-200 font-mono">{labData.executiveSummary.namingConvention.groups}</div>
+                    </div>
+                    <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">
+                      <div className="text-xs text-slate-500 mb-1">Padrão de GPOs</div>
+                      <div className="text-sm text-slate-200 font-mono">{labData.executiveSummary.namingConvention.gpos}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-6">
+                  <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <Lock className="w-5 h-5 text-amber-400" />
+                    GPOs por Setor
+                  </h2>
+                  <div className="space-y-3">
+                    {labData.executiveSummary.gposBySector.map((sector, i) => (
+                      <div key={i} className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-4">
+                        <div className="font-bold text-slate-200 mb-2">{sector.sector}</div>
+                        <ul className="space-y-1 text-sm text-slate-400">
+                          {sector.rules.map((rule, idx) => (
+                            <li key={idx}>• {rule}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-6">
+                  <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <HardDrive className="w-5 h-5 text-indigo-400" />
+                    File Server (Nova Estrutura)
+                  </h2>
+                  <div className="rounded-xl overflow-hidden border border-slate-700/50">
+                    <SyntaxHighlighter
+                      language="text"
+                      style={vscDarkPlus}
+                      customStyle={{ margin: 0, padding: '1rem', background: '#020617', fontSize: '0.75rem' }}
+                    >
+                      {labData.executiveSummary.fileServerStructure}
+                    </SyntaxHighlighter>
+                  </div>
+                  <div className="mt-3 text-xs text-slate-500">
+                    Regras: permissões por grupo, cotas por setor e Shadow Copy.
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-6">
+                  <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <NetworkIcon className="w-5 h-5 text-blue-400" />
+                    DHCP e Auditoria
+                  </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-sm font-bold text-slate-200 mb-2">DHCP (Correção)</div>
+                      <ul className="space-y-1 text-sm text-slate-400">
+                        {labData.executiveSummary.dhcpImprovements.map((item, i) => (
+                          <li key={i}>• {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="border-t border-slate-700/50 pt-4">
+                      <div className="text-sm font-bold text-slate-200 mb-2">Auditoria</div>
+                      <ul className="space-y-1 text-sm text-slate-400">
+                        {labData.executiveSummary.auditAndBackup.audit.map((item, i) => (
+                          <li key={i}>• {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="border-t border-slate-700/50 pt-4">
+                      <div className="text-sm font-bold text-slate-200 mb-2">Backup</div>
+                      <ul className="space-y-1 text-sm text-slate-400">
+                        {labData.executiveSummary.auditAndBackup.backup.map((item, i) => (
+                          <li key={i}>• {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+                {/* Go to Lab Button */}
+                <div className="flex flex-col md:flex-row justify-center gap-4 pt-8 border-t border-slate-700/50">
+                  <button
+                    onClick={() => {
+                      setShowOverview(false);
+                      setShowDiagram(true);
+                      setShowEquipments(false);
+                    }}
+                    className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-200 px-8 py-4 rounded-xl font-bold text-lg border border-blue-500/30 flex items-center justify-center gap-3 transition-all hover:scale-105"
+                  >
+                    Ver Topologia (Antes/Depois)
+                    <NetworkIcon className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowOverview(false);
+                      setActiveStage(labData.stages[0].id);
+                    }}
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/25 flex items-center gap-3 transition-all hover:scale-105"
+                  >
+                    Iniciar Implementação Técnica (Lab)
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </motion.div>
+            ) : showDiagram ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-3xl font-bold text-blue-400 mb-2 flex items-center gap-3">
+                      <NetworkIcon className="w-8 h-8" />
+                      Topologia de Rede: Antes vs Depois
+                    </h2>
+                    <p className="text-slate-400">Visualização da arquitetura e melhoria via segmentação (VLANs) e controle.</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowDiagram(false)}
+                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors font-medium border border-slate-700"
+                  >
+                    <ArrowRight className="w-4 h-4 rotate-180" />
+                    Voltar ao Lab
+                  </button>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8">
+                  {/* ANTES */}
+                  <div className="bg-red-900/10 border border-red-500/20 rounded-2xl p-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                      PROBLEMA (SPOF)
+                    </div>
+                    <h3 className="text-xl font-bold text-red-400 mb-6 flex items-center gap-2">
+                      <Server className="w-5 h-5" /> Arquitetura Antiga
+                    </h3>
+                    
+                    <div className="flex flex-col items-center gap-4">
+                      {/* Único Servidor */}
+                      <div className="bg-slate-800 border-2 border-red-500/50 p-4 rounded-xl w-full text-center relative shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                        <Server className="w-12 h-12 text-red-400 mx-auto mb-2" />
+                        <h4 className="font-bold text-white">MIM-DC01</h4>
+                        <div className="flex flex-wrap justify-center gap-2 mt-3">
+                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded">AD DS</span>
+                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded">DNS</span>
+                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-red-300 font-bold border border-red-500/30">DHCP (Único)</span>
+                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-red-300 font-bold border border-red-500/30">File Server (Bagunçado)</span>
+                        </div>
+                      </div>
+
+                      <div className="h-8 w-0.5 bg-red-500/50"></div>
+
+                      {/* Switch Unico */}
+                      <div className="bg-slate-800 border border-slate-600 p-3 rounded-xl w-3/4 text-center">
+                        <NetworkIcon className="w-6 h-6 text-slate-400 mx-auto mb-1" />
+                        <span className="text-xs text-slate-300">Switch Não Gerenciável</span>
+                      </div>
+
+                      <div className="flex gap-8 w-full justify-center">
+                        <div className="h-8 w-0.5 bg-slate-600 rotate-[30deg] translate-x-4"></div>
+                        <div className="h-8 w-0.5 bg-slate-600 -rotate-[30deg] -translate-x-4"></div>
+                      </div>
+
+                      {/* Clientes */}
+                      <div className="flex justify-between w-full gap-4">
+                        <button 
+                          onClick={() => setActiveDeviceModal('old-stations')}
+                          className="bg-slate-800/50 border border-slate-700 p-3 rounded-xl flex-1 text-center hover:bg-slate-700/50 hover:border-slate-500 transition-all cursor-pointer"
+                        >
+                          <Laptop className="w-8 h-8 text-slate-400 mx-auto mb-1" />
+                          <span className="text-[10px] block text-slate-300">Estações (Misturadas)</span>
+                        </button>
+                        <button 
+                          onClick={() => setActiveDeviceModal('old-devices')}
+                          className="bg-slate-800/50 border border-slate-700 p-3 rounded-xl flex-1 text-center hover:bg-slate-700/50 hover:border-slate-500 transition-all cursor-pointer"
+                        >
+                          <Monitor className="w-8 h-8 text-slate-400 mx-auto mb-1" />
+                          <span className="text-[10px] block text-slate-300">Câmeras/Imp (IP Dinâmico)</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* DEPOIS */}
+                  <div className="bg-green-900/10 border border-green-500/20 rounded-2xl p-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                      SOLUÇÃO (VLANs)
+                    </div>
+                    <h3 className="text-xl font-bold text-green-400 mb-6 flex items-center gap-2">
+                      <Server className="w-5 h-5" /> Arquitetura Nova
+                    </h3>
+                    
+                    <div className="flex flex-col items-center gap-4">
+                      {/* Servidor Único */}
+                      <div className="bg-slate-800 border-2 border-green-500/50 p-4 rounded-xl w-full text-center relative shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+                        <Server className="w-12 h-12 text-green-400 mx-auto mb-2" />
+                        <h4 className="font-bold text-white">MIM-DC01</h4>
+                        <div className="flex flex-wrap justify-center gap-2 mt-3">
+                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded">AD DS</span>
+                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded">DNS</span>
+                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-blue-300 border border-blue-500/30">DHCP</span>
+                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-emerald-300 border border-emerald-500/30">File Server</span>
+                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-amber-300 border border-amber-500/30">ERP</span>
+                        </div>
+                      </div>
+
+                      <div className="h-8 w-0.5 bg-green-500/50"></div>
+
+                      {/* Switch Gerenciável */}
+                      <div className="bg-slate-800 border border-green-500/30 p-3 rounded-xl w-full text-center">
+                        <NetworkIcon className="w-6 h-6 text-green-400 mx-auto mb-1" />
+                        <span className="text-xs text-slate-300">Switch Gerenciável (VLANs: Servidores / Sede / Dep1 / Dep2 / Dispositivos)</span>
+                      </div>
+
+                      <div className="flex gap-12 w-full justify-center">
+                        <div className="h-6 w-0.5 bg-slate-600 rotate-[20deg] translate-x-4"></div>
+                        <div className="h-6 w-0.5 bg-slate-600 -rotate-[20deg] -translate-x-4"></div>
+                      </div>
+
+                      {/* Clientes Organizados */}
+                      <div className="flex justify-between w-full gap-4">
+                        <button 
+                          onClick={() => setActiveDeviceModal('new-stations')}
+                          className="bg-slate-800/50 border border-green-500/30 p-3 rounded-xl flex-1 text-center hover:bg-slate-700/50 hover:border-green-500/60 transition-all cursor-pointer"
+                        >
+                          <Laptop className="w-6 h-6 text-green-400 mx-auto mb-1" />
+                          <span className="text-[10px] block text-slate-300">OUs Sede/Depósitos</span>
+                          <span className="text-[8px] text-slate-500">GPOs Aplicadas</span>
+                        </button>
+                        <button 
+                          onClick={() => setActiveDeviceModal('new-devices')}
+                          className="bg-slate-800/50 border border-green-500/30 p-3 rounded-xl flex-1 text-center hover:bg-slate-700/50 hover:border-green-500/60 transition-all cursor-pointer"
+                        >
+                          <Monitor className="w-6 h-6 text-green-400 mx-auto mb-1" />
+                          <span className="text-[10px] block text-slate-300">Câmeras/Imp</span>
+                          <span className="text-[8px] text-slate-500">Reservas MAC/IP</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ) : showEquipments ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -515,6 +1105,35 @@ function App() {
                                 className="border-t border-slate-700/50 bg-slate-900/30"
                               >
                                 <div className="p-5 pt-2">
+                                  {/* Hint Section */}
+                                  {step.hint && (
+                                    <div className="mb-4">
+                                      <button
+                                        onClick={(e) => toggleHint(step.id, e)}
+                                        className="flex items-center gap-2 text-xs font-medium text-amber-400 hover:text-amber-300 transition-colors bg-amber-500/10 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg border border-amber-500/20"
+                                      >
+                                        <Lightbulb className={cn("w-3.5 h-3.5 transition-transform", visibleHints[step.id] ? "text-amber-300" : "")} />
+                                        {visibleHints[step.id] ? "Esconder Dica do Analista" : "Ver Dica do Analista"}
+                                      </button>
+                                      
+                                      <AnimatePresence>
+                                        {visibleHints[step.id] && (
+                                          <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: "auto", opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="overflow-hidden mt-2"
+                                          >
+                                            <div className="p-3 bg-amber-950/30 border border-amber-500/20 rounded-lg text-sm text-amber-200/80 italic flex gap-3 items-start">
+                                              <span className="text-amber-500 text-lg leading-none">"</span>
+                                              <p className="flex-1 pt-0.5">{step.hint}</p>
+                                            </div>
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+                                  )}
+
                                   {step.type === 'input' && step.variable === 'domainName' && (
                                     <div className="mb-6 bg-indigo-900/20 p-4 rounded-xl border border-indigo-500/30">
                                       <label className="block text-sm font-medium text-indigo-300 mb-2">
@@ -614,13 +1233,32 @@ function App() {
                                             {/* Detailed Content */}
                                             <div className="ml-10 space-y-3">
                                               {currentMode === 'gui' && (
-                                                <div className="text-slate-400 text-sm space-y-1 bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
-                                                  {instr.details.map((detail, idx) => (
-                                                    <div key={idx} className="flex items-start gap-2">
-                                                      <span className="w-1 h-1 bg-slate-600 rounded-full mt-2 flex-shrink-0" />
-                                                      <span>{replaceVariables(detail)}</span>
+                                                <div className="space-y-3">
+                                                  <div className="text-slate-400 text-sm space-y-1 bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
+                                                    {instr.details.map((detail, idx) => (
+                                                      <div key={idx} className="flex items-start gap-2">
+                                                        <span className="w-1 h-1 bg-slate-600 rounded-full mt-2 flex-shrink-0" />
+                                                        <span>{replaceVariables(detail)}</span>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                  {instr.image && (
+                                                    <div 
+                                                      className="relative group/image rounded-lg overflow-hidden border border-slate-700/50 cursor-zoom-in"
+                                                      onClick={() => setZoomedImage(instr.image)}
+                                                    >
+                                                      <img 
+                                                        src={instr.image} 
+                                                        alt={`Passo a passo: ${instr.text}`} 
+                                                        className="w-full max-h-64 object-cover opacity-80 group-hover/image:opacity-100 transition-opacity"
+                                                      />
+                                                      <div className="absolute inset-0 bg-indigo-500/10 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <div className="bg-slate-900/80 p-2 rounded-full backdrop-blur-sm text-white flex items-center gap-2 text-xs">
+                                                          <ImageIcon className="w-4 h-4" /> Ampliar Imagem
+                                                        </div>
+                                                      </div>
                                                     </div>
-                                                  ))}
+                                                  )}
                                                 </div>
                                               )}
                                               
@@ -739,6 +1377,87 @@ function App() {
           </div>
         </main>
       </div>
+    </div>
+  );
+}
+
+function DeviceDetailsModal({ modalType, onClose }) {
+  if (!modalType || !labData.topologyDetails[modalType]) return null;
+
+  const data = labData.topologyDetails[modalType];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+      >
+        <div className="flex justify-between items-center p-5 border-b border-slate-700/50 bg-slate-900/50">
+          <div>
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <NetworkIcon className="w-5 h-5 text-indigo-400" />
+              {data.title}
+            </h3>
+            <p className="text-sm text-slate-400 mt-1">{data.description}</p>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700 rounded-lg">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-5 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-900/50 text-slate-400 font-medium">
+                <tr>
+                  <th className="px-4 py-3 rounded-tl-lg">Dispositivo</th>
+                  <th className="px-4 py-3">Endereço IP</th>
+                  <th className="px-4 py-3">MAC Address</th>
+                  <th className="px-4 py-3 rounded-tr-lg">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-700/50">
+                {data.devices.map((device, i) => (
+                  <tr key={i} className="hover:bg-slate-700/20 transition-colors group">
+                    <td className="px-4 py-3 font-medium text-white flex items-center gap-2">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        device.status.includes('Online') ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : 
+                        device.status.includes('Erro') || device.status.includes('Conflito') ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" : 
+                        "bg-slate-500"
+                      )}></div>
+                      {device.name}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs">
+                      <span className={cn(
+                        "px-2 py-1 rounded bg-slate-900 border",
+                        device.ip.includes('Reservado') ? "border-green-500/30 text-green-300" :
+                        device.ip.includes('Erro') || device.ip.includes('Conflito') ? "border-red-500/30 text-red-300" :
+                        "border-slate-700 text-indigo-300"
+                      )}>
+                        {device.ip}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-400 font-mono text-xs">{device.mac}</td>
+                    <td className="px-4 py-3">
+                      <span className={cn(
+                        "text-xs",
+                        device.status.includes('Online') ? "text-green-400" : 
+                        device.status.includes('Erro') || device.status.includes('Conflito') ? "text-red-400 font-bold" : 
+                        "text-slate-400"
+                      )}>
+                        {device.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 }
