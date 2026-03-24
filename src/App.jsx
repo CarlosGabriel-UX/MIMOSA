@@ -1125,27 +1125,46 @@ function App() {
                   {/* DEPOIS */}
                   <div className="bg-green-900/10 border border-green-500/20 rounded-2xl p-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                      SOLUÇÃO (VLANs)
+                      SOLUÇÃO (ALTA DISP. + VLANs)
                     </div>
                     <h3 className="text-xl font-bold text-green-400 mb-6 flex items-center gap-2">
                       <Server className="w-5 h-5" /> Arquitetura Nova
                     </h3>
                     
                     <div className="flex flex-col items-center gap-4">
-                      {/* Servidor Único */}
-                      <div className="bg-slate-800 border-2 border-green-500/50 p-4 rounded-xl w-full text-center relative shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-                        <Server className="w-12 h-12 text-green-400 mx-auto mb-2" />
-                        <h4 className="font-bold text-white">MIM-DC01</h4>
-                        <div className="flex flex-wrap justify-center gap-2 mt-3">
-                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded">AD DS</span>
-                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded">DNS</span>
-                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-blue-300 border border-blue-500/30">DHCP</span>
-                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-emerald-300 border border-emerald-500/30">File Server</span>
-                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-amber-300 border border-amber-500/30">ERP</span>
+                      {/* Dois Servidores */}
+                      <div className="flex gap-4 w-full">
+                        <div className="bg-slate-800 border-2 border-green-500/50 p-4 rounded-xl flex-1 text-center relative shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+                          <Server className="w-10 h-10 text-green-400 mx-auto mb-2" />
+                          <h4 className="font-bold text-white text-sm">MIM-DC01</h4>
+                          <div className="flex flex-wrap justify-center gap-1 mt-2">
+                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">AD DS</span>
+                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">DNS</span>
+                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-blue-300 border border-blue-500/30">DHCP (Active)</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center text-green-500/50">
+                          <ArrowRight className="w-6 h-6" />
+                          <ArrowRight className="w-6 h-6 rotate-180 -ml-4" />
+                        </div>
+
+                        <div className="bg-slate-800 border-2 border-green-500/50 p-4 rounded-xl flex-1 text-center relative shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+                          <Server className="w-10 h-10 text-green-400 mx-auto mb-2" />
+                          <h4 className="font-bold text-white text-sm">MIM-DC02</h4>
+                          <div className="flex flex-wrap justify-center gap-1 mt-2">
+                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">AD DS</span>
+                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">DNS</span>
+                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-blue-300 border border-blue-500/30">DHCP (Standby)</span>
+                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-emerald-300 border border-emerald-500/30">File Server</span>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="h-8 w-0.5 bg-green-500/50"></div>
+                      <div className="flex gap-16 w-full justify-center">
+                        <div className="h-6 w-0.5 bg-green-500/50"></div>
+                        <div className="h-6 w-0.5 bg-green-500/50"></div>
+                      </div>
 
                       {/* Switch Gerenciável */}
                       <div className="bg-slate-800 border border-green-500/30 p-3 rounded-xl w-full text-center">

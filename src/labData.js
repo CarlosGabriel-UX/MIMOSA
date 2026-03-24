@@ -1,6 +1,6 @@
 export const labData = {
   title: "CASE 2 — EMPRESA MIMOSA",
-  description: "Reestruturação completa da infraestrutura Windows Server, saindo de um ambiente falho e vulnerável para uma solução com 1 servidor e VLANs (segmentação e controle).",
+  description: "Reestruturação completa da infraestrutura Windows Server, saindo de um ambiente falho e vulnerável para uma arquitetura com 2 servidores, segmentação por VLANs e serviços críticos redundantes.",
   executiveSummary: {
     currentScenario: {
       title: "Infraestrutura Atual — Ambiente Crítico e Vulnerável",
@@ -26,11 +26,12 @@ export const labData = {
       "Dependência extrema de uma única máquina física"
     ],
     proposedArchitecture: {
-      title: "Infraestrutura Recomendada — Segmentação e Segurança (1 Servidor + VLANs)",
+      title: "Infraestrutura Recomendada — Alta Disponibilidade e Segurança (2 Servidores + VLANs)",
       servers: [
-        "1 servidor físico robusto (ou 1 host com virtualização)",
-        "AD DS + DNS + DHCP + File Server no mesmo servidor",
-        "ERP preferencialmente isolado em VM no mesmo host (quando possível)"
+        "2 servidores físicos (ou virtualização Hyper-V com 2 VMs)",
+        "DC01: AD DS + DNS + DHCP (Active)",
+        "DC02: DC adicional + DNS + DHCP (Standby/Failover) + File Server",
+        "ERP preferencialmente isolado (VM dedicada)"
       ],
       network: [
         "VLANs separadas: Servidores, Sede, Depósito 1, Depósito 2, Dispositivos",
@@ -52,8 +53,8 @@ export const labData = {
       ]
     },
     spofNote: {
-      title: "Importante: SPOF continua existindo (1 servidor)",
-      text: "A solução com 1 servidor melhora segurança e organização via VLANs, GPOs e permissões, mas não elimina o risco de parada total. Para mitigar, use RAID, nobreak, peças redundantes quando possível e backups 3-2-1 com teste de restore.",
+      title: "SPOF mitigado com 2 servidores (mas não desaparece 100%)",
+      text: "Com DC02, o AD/DNS deixa de depender de um único servidor e o DHCP passa a ter failover. Ainda existe risco residual (energia, switch/gateway, storage e desastre). Mitigue com RAID, UPS e backups 3-2-1 com teste de restore.",
       mitigations: ["RAID (ex: RAID1/RAID10)", "Nobreak senoidal (UPS)", "Backup diário + regra 3-2-1", "Teste de restore", "Monitoramento básico e documentação"]
     },
     adStructure: `ou_mimosa
@@ -100,18 +101,26 @@ export const labData = {
   network: {
     subnet: "VLAN10 Servidores: 192.168.10.0/24 | VLAN20 Sede: 192.168.20.0/24 | VLAN30 Dep1: 192.168.30.0/24 | VLAN40 Dep2: 192.168.40.0/24 | VLAN50 Dispositivos: 192.168.50.0/24",
     gateway: "Inter-VLAN: 192.168.10.1 / 20.1 / 30.1 / 40.1 / 50.1",
-    dns: "192.168.10.10 (MIM-DC01)",
+    dns: "192.168.10.10 (MIM-DC01), 192.168.10.11 (MIM-DC02)",
     reservedRange: "VLAN10: 192.168.10.2-10.50 (Infra/Rede) | VLAN50: 192.168.50.10-50.50 (Impressoras/Câmeras)",
     dhcpRange: "VLAN20: 192.168.20.50-20.199 | VLAN30: 192.168.30.50-30.199 | VLAN40: 192.168.40.50-40.199"
   },
   vms: [
     {
-      name: "Servidor Único (Solução)",
+      name: "Servidor Principal (DC01)",
       hostname: "MIM-DC01",
       os: "Windows Server 2016 Std",
       ip: "VLAN10: 192.168.10.10 (Estático)",
-      disks: "Sistema (C:) + Dados (D:) + Backups/Logs (E: opcional)",
-      role: "AD DS, DNS, DHCP, File Server, Auditoria, ERP (se necessário)"
+      disks: "Sistema (C:) + Dados (D:) + Logs/Backups (E: opcional)",
+      role: "AD DS, DNS, DHCP (Active), GPOs"
+    },
+    {
+      name: "Servidor Secundário (DC02)",
+      hostname: "MIM-DC02",
+      os: "Windows Server 2016/2019/2022",
+      ip: "VLAN10: 192.168.10.11 (Estático)",
+      disks: "Sistema (C:) + Dados (D:) + Logs (E: opcional)",
+      role: "DC adicional, DNS, DHCP (Standby/Failover), File Server, WEF (opcional)"
     },
     {
       name: "Switch Gerenciável (Infra)",
@@ -156,7 +165,8 @@ export const labData = {
   ],
   sheets: {
     ipTable: [
-      { group: "Infra", device: "Servidor Único", hostname: "MIM-DC01", vlan: "VLAN10", ip: "192.168.10.10", mac: "", type: "Estático", location: "Sede", notes: "AD DS/DNS/DHCP/File/ERP (se necessário)" },
+      { group: "Infra", device: "Servidor (DC01)", hostname: "MIM-DC01", vlan: "VLAN10", ip: "192.168.10.10", mac: "", type: "Estático", location: "Sede", notes: "AD DS/DNS/DHCP Active" },
+      { group: "Infra", device: "Servidor (DC02)", hostname: "MIM-DC02", vlan: "VLAN10", ip: "192.168.10.11", mac: "", type: "Estático", location: "Sede", notes: "DC adicional/DNS/DHCP Standby + File Server" },
       { group: "Infra", device: "Switch Gerenciável", hostname: "SW-MIM-01", vlan: "VLAN10", ip: "192.168.10.2", mac: "", type: "Estático", location: "Sede", notes: "Gerência do switch" },
       { group: "Gateway", device: "Gateway VLAN10", hostname: "GW-VLAN10", vlan: "VLAN10", ip: "192.168.10.1", mac: "", type: "Estático", location: "Sede", notes: "Inter-VLAN (roteador/L3/firewall)" },
       { group: "Gateway", device: "Gateway VLAN20", hostname: "GW-VLAN20", vlan: "VLAN20", ip: "192.168.20.1", mac: "", type: "Estático", location: "Sede", notes: "Inter-VLAN (roteador/L3/firewall)" },
@@ -273,9 +283,10 @@ export const labData = {
     {
       category: "Servidores & Armazenamento",
       items: [
-        { name: "Servidor Único Robusto", desc: "Servidor Rack ou Torre (ex: Dell/HP) com redundância (RAID, fontes redundantes se possível) para suportar AD/DNS/DHCP/File/ERP.", priority: "Alta" },
+        { name: "Servidor Principal (DC01)", desc: "Servidor Rack/Torre (ex: Dell/HP) para AD/DNS/DHCP (Active) e serviços centrais.", priority: "Alta" },
+        { name: "Servidor Secundário (DC02)", desc: "Servidor adicional para redundância (DC/DNS), DHCP Failover e File Server.", priority: "Alta" },
         { name: "NAS (Network Attached Storage)", desc: "Equipamento para rotinas de backup local isolado (ex: QNAP ou Synology de 4 baias).", priority: "Alta" },
-        { name: "Nobreak (UPS)", desc: "Nobreak senoidal de 3KVA+ para manter o servidor e equipamentos de rede ativos em quedas de energia.", priority: "Crítica" }
+        { name: "Nobreak (UPS)", desc: "Nobreak senoidal de 3KVA+ para manter os servidores e equipamentos de rede ativos em quedas de energia.", priority: "Crítica" }
       ]
     },
     {
@@ -362,7 +373,7 @@ export const labData = {
       steps: [
         {
           id: "s1-1",
-          text: "Instalar Servidor Único (MIM-DC01)",
+          text: "Instalar Servidor Principal (MIM-DC01)",
           details: "Instale o Windows Server e configure IP estático na VLAN de Servidores.",
           instructions: {
             "MIM-DC01": [
@@ -385,6 +396,40 @@ export const labData = {
                 details: ["Crie a floresta do domínio e habilite o DNS integrado."],
                 command: `Install-WindowsFeature AD-Domain-Services, DNS, DHCP, FS-FileServer -IncludeManagementTools
 Install-ADDSForest -DomainName "mimosa.local" -InstallDns -Force`
+              }
+            ]
+          }
+        },
+        {
+          id: "s1-3",
+          text: "Instalar Servidor Secundário (MIM-DC02)",
+          details: "Instale o Windows Server no segundo servidor e configure IP estático na VLAN de Servidores.",
+          instructions: {
+            "MIM-DC02": [
+              {
+                text: "Configuração Básica",
+                details: ["Nome: MIM-DC02", "VLAN10 IP: 192.168.10.11/24", "DNS: 192.168.10.10 (DC01)"],
+                command: `Rename-Computer -NewName "MIM-DC02" -Restart`
+              },
+              {
+                text: "Ingressar no Domínio",
+                details: ["Após o reboot, adicione o servidor ao domínio mimosa.local."],
+                command: `Add-Computer -DomainName "mimosa.local" -Restart`
+              }
+            ]
+          }
+        },
+        {
+          id: "s1-4",
+          text: "Promover DC02 a Controlador de Domínio",
+          details: "Elimine o ponto único de falha do AD/DNS adicionando um DC adicional.",
+          instructions: {
+            "MIM-DC02": [
+              {
+                text: "Instalar AD DS e Promover",
+                details: ["Instale AD DS e promova como Domain Controller adicional com DNS."],
+                command: `Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
+Install-ADDSDomainController -DomainName "mimosa.local" -InstallDns`
               }
             ]
           }
@@ -434,13 +479,18 @@ New-ADGroup -Name "GPR_Financeiro" -GroupCategory Security -GroupScope Global -P
         {
           id: "s3-1",
           text: "Criar Estrutura e Migrar Dados",
-          details: "Prepare o File Server no MIM-DC01 (organizado por setor).",
+          details: "Prepare o File Server no MIM-DC02 (organizado por setor) e migre os dados do compartilhamento antigo.",
           instructions: {
-            "MIM-DC01": [
+            "MIM-DC02": [
               {
                 text: "Criar Pastas Departamentais",
                 details: ["Crie as pastas Financeiro, RH, Comercial, etc., no disco D:."],
                 command: `New-Item -Path "D:\\Dados\\Financeiro" -ItemType Directory`
+              },
+              {
+                text: "Criar Share Principal",
+                details: ["Crie o compartilhamento \\\\MIM-DC02\\Dados com ABE habilitado (recomendado)."],
+                command: `New-SmbShare -Name "Dados" -Path "D:\\Dados" -FolderEnumerationMode AccessBased`
               }
             ]
           }
@@ -451,7 +501,7 @@ New-ADGroup -Name "GPR_Financeiro" -GroupCategory Security -GroupScope Global -P
           details: "Quebre a herança e restrinja acessos.",
           hint: "Sempre dê permissão para o Grupo, nunca para o Usuário individualmente.",
           instructions: {
-            "MIM-DC01": [
+            "MIM-DC02": [
               {
                 text: "Restringir pasta Financeiro",
                 details: ["Desabilite herança e dê permissão apenas para GPR_Financeiro e System."]
@@ -482,6 +532,21 @@ Add-DhcpServerv4Scope -Name "VLAN40-DEP2" -StartRange 192.168.40.50 -EndRange 19
 Set-DhcpServerv4OptionValue -ScopeId 192.168.20.0 -DnsServer 192.168.10.10 -Router 192.168.20.1
 Set-DhcpServerv4OptionValue -ScopeId 192.168.30.0 -DnsServer 192.168.10.10 -Router 192.168.30.1
 Set-DhcpServerv4OptionValue -ScopeId 192.168.40.0 -DnsServer 192.168.10.10 -Router 192.168.40.1`
+              }
+            ]
+          }
+        },
+        {
+          id: "s4-1b",
+          text: "Configurar DHCP Failover (DC01 ⇄ DC02)",
+          details: "Garanta que o DHCP continue entregando IPs mesmo se um servidor cair.",
+          hint: "Se você está usando 2 servidores, aproveite para habilitar Failover. O Hot Standby é o mais simples para laboratório.",
+          instructions: {
+            "MIM-DC01": [
+              {
+                text: "Criar Relação de Failover",
+                details: ["Partner Server: MIM-DC02", "Mode: Hot Standby", "Aplique para os escopos VLAN20/30/40/50."],
+                command: `Add-DhcpServerv4Failover -ComputerName "MIM-DC01" -Name "Mimosa-Failover" -PartnerServer "MIM-DC02" -ScopeId 192.168.20.0,192.168.30.0,192.168.40.0,192.168.50.0 -Mode HotStandby -Role Active`
               }
             ]
           }
@@ -535,7 +600,13 @@ Set-DhcpServerv4OptionValue -ScopeId 192.168.50.0 -DnsServer 192.168.10.10 -Rout
             "MIM-DC01": [
               {
                 text: "Agendar Backup Diário",
-                details: ["Use o Windows Server Backup para agendar cópias diárias para o NAS/Disco Externo."]
+                details: ["Agende backup de System State do DC01 e mantenha uma cópia externa (3-2-1)."]
+              }
+            ],
+            "MIM-DC02": [
+              {
+                text: "Backup do File Server",
+                details: ["Agende backup do volume de dados (D:) do File Server para o NAS/Disco Externo e teste restauração de um arquivo."]
               }
             ]
           }
@@ -590,17 +661,25 @@ Write-Host "Pastas e compartilhamentos removidos." -ForegroundColor Green`
         },
         {
           id: "rb-2",
-          text: "Remover Escopos e Reservas das VLANs",
-          details: "Desfaz a segmentação do DHCP (escopos por VLAN) criada no lab.",
+          text: "Desfazer Failover e Rebaixar DC02",
+          details: "Remove DHCP Failover, apaga escopos por VLAN e rebaixa o DC02 para recomeçar do zero.",
           instructions: {
             "MIM-DC01": [
               {
-                text: "Remover escopos VLAN20/30/40/50.",
-                details: ["Remove os escopos DHCP criados para segmentação."],
-                command: `Remove-DhcpServerv4Scope -ScopeId 192.168.20.0 -Force -ErrorAction SilentlyContinue
+                text: "Remover DHCP Failover e escopos VLAN.",
+                details: ["Remove a relação de failover e os escopos DHCP criados para segmentação."],
+                command: `Remove-DhcpServerv4Failover -Name "Mimosa-Failover" -Force -ErrorAction SilentlyContinue
+Remove-DhcpServerv4Scope -ScopeId 192.168.20.0 -Force -ErrorAction SilentlyContinue
 Remove-DhcpServerv4Scope -ScopeId 192.168.30.0 -Force -ErrorAction SilentlyContinue
 Remove-DhcpServerv4Scope -ScopeId 192.168.40.0 -Force -ErrorAction SilentlyContinue
 Remove-DhcpServerv4Scope -ScopeId 192.168.50.0 -Force -ErrorAction SilentlyContinue`
+              }
+            ],
+            "MIM-DC02": [
+              {
+                text: "Rebaixar Controlador de Domínio",
+                details: ["Remove o AD DS do servidor secundário e o tira do domínio (reinicia)."],
+                command: `Uninstall-ADDSDomainController -DemoteOperationMasterRole:$true -ForceRemoval -LocalAdministratorPassword (ConvertTo-SecureString "Senha123!" -AsPlainText -Force) -Force`
               }
             ]
           }
