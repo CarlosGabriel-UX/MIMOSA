@@ -59,6 +59,9 @@ function App() {
   const [showEquipments, setShowEquipments] = useState(false);
   const [showDiagram, setShowDiagram] = useState(false);
   const [showOverview, setShowOverview] = useState(true); // New state for Executive Overview
+  const [showSheets, setShowSheets] = useState(false);
+  const [activeSheet, setActiveSheet] = useState('ips'); // 'ips' | 'users'
+  const [sheetQuery, setSheetQuery] = useState('');
   const [activeDeviceModal, setActiveDeviceModal] = useState(null); // 'old-stations', 'old-devices', 'new-stations', 'new-devices'
   const [visibleHints, setVisibleHints] = useState({}); // { stepId: true/false }
   const [zoomedImage, setZoomedImage] = useState(null); // url of the image to zoom
@@ -184,6 +187,55 @@ function App() {
     }
   };
 
+  const downloadCsv = (filename, header, rows) => {
+    const content = [header, ...rows].join('\n');
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(`Planilha ${filename} baixada!`);
+  };
+
+  const exportSheetCsv = (type) => {
+    if (!labData.sheets) return;
+
+    if (type === 'ips') {
+      const header = 'Grupo,Dispositivo,Hostname,VLAN,IP,MAC,Tipo,Local,Observações';
+      const rows = labData.sheets.ipTable.map(r => [
+        r.group,
+        r.device,
+        r.hostname,
+        r.vlan,
+        r.ip,
+        r.mac,
+        r.type,
+        r.location,
+        (r.notes || '').replaceAll('\n', ' ')
+      ].map(v => `"${String(v ?? '').replaceAll('"', '""')}"`).join(','));
+      downloadCsv('mimosa_tabela_ips.csv', header, rows);
+      return;
+    }
+
+    if (type === 'users') {
+      const header = 'Login,Nome,Setor,Local,OU,Grupo,Acesso';
+      const rows = labData.sheets.usersTable.map(r => [
+        r.login,
+        r.displayName,
+        r.sector,
+        r.location,
+        r.ou,
+        r.group,
+        (r.access || '').replaceAll('\n', ' ')
+      ].map(v => `"${String(v ?? '').replaceAll('"', '""')}"`).join(','));
+      downloadCsv('mimosa_lista_usuarios.csv', header, rows);
+    }
+  };
+
   const toggleHint = (stepId, e) => {
     e?.stopPropagation();
     setVisibleHints(prev => ({
@@ -292,6 +344,7 @@ function App() {
                     setShowOverview(true);
                     setShowDiagram(false);
                     setShowEquipments(false);
+                    setShowSheets(false);
                     if (window.innerWidth < 768) setIsSidebarOpen(false);
                   }}
                   className={cn(
@@ -320,7 +373,7 @@ function App() {
                 {labData.stages.map(stage => {
                   if (stage.id === 'stage-rollback') return null;
 
-                  const isActive = activeStage === stage.id && !showEquipments && !showDiagram && !showOverview;
+                  const isActive = activeStage === stage.id && !showEquipments && !showDiagram && !showOverview && !showSheets;
                   const progress = calculateProgress(stage.id);
                   const isCompleted = progress === 100;
 
@@ -332,6 +385,7 @@ function App() {
                         setShowOverview(false);
                         setShowEquipments(false);
                         setShowDiagram(false);
+                        setShowSheets(false);
                         if (window.innerWidth < 768) setIsSidebarOpen(false);
                       }}
                       className={cn(
@@ -364,7 +418,7 @@ function App() {
                   );
                 })}
                 {labData.stages.filter(s => s.id === 'stage-rollback').map(stage => {
-                  const isActive = activeStage === stage.id && !showEquipments && !showDiagram && !showOverview;
+                  const isActive = activeStage === stage.id && !showEquipments && !showDiagram && !showOverview && !showSheets;
                   return (
                     <button
                       key={stage.id}
@@ -373,6 +427,7 @@ function App() {
                         setShowOverview(false);
                         setShowEquipments(false);
                         setShowDiagram(false);
+                        setShowSheets(false);
                         if (window.innerWidth < 768) setIsSidebarOpen(false);
                       }}
                       className={cn(
@@ -424,12 +479,41 @@ function App() {
                 </div>
               )}
 
+              {labData.sheets && (
+                <div className="space-y-2 mt-4">
+                  <button
+                    onClick={() => {
+                      setShowSheets(true);
+                      setShowOverview(false);
+                      setShowDiagram(false);
+                      setShowEquipments(false);
+                      if (window.innerWidth < 768) setIsSidebarOpen(false);
+                    }}
+                    className={cn(
+                      "w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden border",
+                      showSheets
+                        ? "bg-emerald-600/30 text-emerald-100 border-emerald-500/30"
+                        : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/20"
+                    )}
+                  >
+                    <div className="p-2 rounded-lg bg-emerald-500/20 group-hover:bg-emerald-500/30 transition-colors">
+                      <FileSpreadsheet className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="block text-sm font-medium truncate">Planilhas</span>
+                      <span className="text-[10px] opacity-70">IPs e Usuários</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+
               {/* Diagram Section */}
               <div className="space-y-2 mt-4">
                 <button
                     onClick={() => {
                       setShowDiagram(true);
                       setShowOverview(false);
+                      setShowSheets(false);
                       setShowEquipments(false);
                       if (window.innerWidth < 768) setIsSidebarOpen(false);
                     }}
@@ -453,6 +537,7 @@ function App() {
                       setShowEquipments(true);
                       setShowDiagram(false);
                       setShowOverview(false);
+                      setShowSheets(false);
                       if (window.innerWidth < 768) setIsSidebarOpen(false);
                     }}
                     className="w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20"
@@ -806,6 +891,157 @@ function App() {
                     <ArrowRight className="w-5 h-5" />
                   </button>
                 </div>
+              </motion.div>
+            ) : showSheets ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-3xl font-bold text-emerald-300 mb-2 flex items-center gap-3">
+                      <FileSpreadsheet className="w-8 h-8" />
+                      Planilhas do Case Mimosa
+                    </h2>
+                    <p className="text-slate-400">Tabela de IPs por VLAN e lista de usuários por setor.</p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={() => exportSheetCsv(activeSheet === 'ips' ? 'ips' : 'users')}
+                      className="flex items-center justify-center gap-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-100 px-4 py-2 rounded-lg transition-colors font-medium border border-emerald-500/30"
+                    >
+                      <Download className="w-4 h-4" />
+                      Baixar CSV
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowSheets(false);
+                        setShowOverview(true);
+                      }}
+                      className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors font-medium border border-slate-700"
+                    >
+                      <ArrowRight className="w-4 h-4 rotate-180" />
+                      Voltar
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 flex flex-col md:flex-row gap-3 md:items-center">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setActiveSheet('ips')}
+                      className={cn(
+                        "px-4 py-2 rounded-lg text-sm font-semibold border transition-colors",
+                        activeSheet === 'ips'
+                          ? "bg-emerald-500/20 text-emerald-200 border-emerald-500/30"
+                          : "bg-slate-900/30 text-slate-300 border-slate-700 hover:border-slate-500"
+                      )}
+                    >
+                      Tabela de IPs
+                    </button>
+                    <button
+                      onClick={() => setActiveSheet('users')}
+                      className={cn(
+                        "px-4 py-2 rounded-lg text-sm font-semibold border transition-colors",
+                        activeSheet === 'users'
+                          ? "bg-emerald-500/20 text-emerald-200 border-emerald-500/30"
+                          : "bg-slate-900/30 text-slate-300 border-slate-700 hover:border-slate-500"
+                      )}
+                    >
+                      Lista de Usuários
+                    </button>
+                  </div>
+                  <div className="flex-1" />
+                  <input
+                    value={sheetQuery}
+                    onChange={(e) => setSheetQuery(e.target.value)}
+                    placeholder="Buscar..."
+                    className="w-full md:w-80 px-3 py-2 rounded-lg bg-slate-900/50 border border-slate-700 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                  />
+                </div>
+
+                {activeSheet === 'ips' ? (
+                  <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-slate-900/60 text-slate-300 font-semibold">
+                          <tr>
+                            <th className="px-4 py-3">Grupo</th>
+                            <th className="px-4 py-3">Dispositivo</th>
+                            <th className="px-4 py-3">Hostname</th>
+                            <th className="px-4 py-3">VLAN</th>
+                            <th className="px-4 py-3">IP</th>
+                            <th className="px-4 py-3">Tipo</th>
+                            <th className="px-4 py-3">Local</th>
+                            <th className="px-4 py-3">Observações</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-700/50">
+                          {labData.sheets.ipTable
+                            .filter(r => {
+                              const q = sheetQuery.trim().toLowerCase();
+                              if (!q) return true;
+                              return [
+                                r.group, r.device, r.hostname, r.vlan, r.ip, r.type, r.location, r.notes
+                              ].join(' ').toLowerCase().includes(q);
+                            })
+                            .map((row, i) => (
+                              <tr key={i} className="hover:bg-slate-700/20 transition-colors">
+                                <td className="px-4 py-3 text-slate-200">{row.group}</td>
+                                <td className="px-4 py-3 text-slate-200">{row.device}</td>
+                                <td className="px-4 py-3 font-mono text-xs text-indigo-200">{row.hostname}</td>
+                                <td className="px-4 py-3 font-mono text-xs text-emerald-200">{row.vlan}</td>
+                                <td className="px-4 py-3 font-mono text-xs text-slate-200">{row.ip}</td>
+                                <td className="px-4 py-3 text-slate-300">{row.type}</td>
+                                <td className="px-4 py-3 text-slate-300">{row.location}</td>
+                                <td className="px-4 py-3 text-slate-400">{row.notes}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-slate-900/60 text-slate-300 font-semibold">
+                          <tr>
+                            <th className="px-4 py-3">Login</th>
+                            <th className="px-4 py-3">Nome</th>
+                            <th className="px-4 py-3">Setor</th>
+                            <th className="px-4 py-3">Local</th>
+                            <th className="px-4 py-3">OU</th>
+                            <th className="px-4 py-3">Grupo</th>
+                            <th className="px-4 py-3">Acesso</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-700/50">
+                          {labData.sheets.usersTable
+                            .filter(r => {
+                              const q = sheetQuery.trim().toLowerCase();
+                              if (!q) return true;
+                              return [
+                                r.login, r.displayName, r.sector, r.location, r.ou, r.group, r.access
+                              ].join(' ').toLowerCase().includes(q);
+                            })
+                            .map((row, i) => (
+                              <tr key={i} className="hover:bg-slate-700/20 transition-colors">
+                                <td className="px-4 py-3 font-mono text-xs text-indigo-200">{row.login}</td>
+                                <td className="px-4 py-3 text-slate-200">{row.displayName}</td>
+                                <td className="px-4 py-3 text-slate-300">{row.sector}</td>
+                                <td className="px-4 py-3 text-slate-300">{row.location}</td>
+                                <td className="px-4 py-3 font-mono text-[11px] text-slate-400">{row.ou}</td>
+                                <td className="px-4 py-3 font-mono text-[11px] text-emerald-200">{row.group}</td>
+                                <td className="px-4 py-3 text-slate-400">{row.access}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             ) : showDiagram ? (
               <motion.div
