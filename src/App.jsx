@@ -50,106 +50,114 @@ function cn(...inputs) {
 
 function TopologyDiagram({ isSlide = false }) {
   return (
-    <div className={cn("grid gap-8", isSlide ? "md:grid-cols-2" : "md:grid-cols-2")}>
+    <div className={cn("grid gap-4 w-full", isSlide ? "md:grid-cols-2" : "md:grid-cols-2")}>
       {/* ANTES */}
-      <div className="bg-red-900/10 border border-red-500/20 rounded-2xl p-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase">
+      <div className={cn(
+        "bg-red-900/10 border border-red-500/20 rounded-2xl relative overflow-hidden flex flex-col",
+        isSlide ? "p-4" : "p-6"
+      )}>
+        <div className="absolute top-0 right-0 bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg uppercase">
           PROBLEMA (SPOF)
         </div>
-        <h3 className="text-xl font-bold text-red-400 mb-6 flex items-center gap-2">
-          <Server className="w-5 h-5" /> Arquitetura Antiga
+        <h3 className={cn("font-bold text-red-400 flex items-center gap-2", isSlide ? "text-base mb-3" : "text-xl mb-6")}>
+          <Server className={isSlide ? "w-4 h-4" : "w-5 h-5"} /> Arquitetura Antiga
         </h3>
         
-        <div className="flex flex-col items-center gap-4">
-          <div className="bg-slate-800 border-2 border-red-500/50 p-4 rounded-xl w-full text-center relative shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-            <Server className="w-12 h-12 text-red-400 mx-auto mb-2" />
-            <h4 className="font-bold text-white">MIM-DC01</h4>
-            <div className="flex flex-wrap justify-center gap-2 mt-3">
-              <span className="text-[10px] bg-slate-700 px-2 py-1 rounded">AD DS</span>
-              <span className="text-[10px] bg-slate-700 px-2 py-1 rounded">DNS</span>
-              <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-red-300 font-bold border border-red-500/30">DHCP (Único)</span>
-              <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-red-300 font-bold border border-red-500/30">File Server (Bagunçado)</span>
+        <div className="flex flex-col items-center justify-center flex-1 gap-2">
+          <div className={cn(
+            "bg-slate-800 border-2 border-red-500/50 rounded-xl w-full text-center relative shadow-[0_0_15px_rgba(239,68,68,0.2)]",
+            isSlide ? "p-2" : "p-4"
+          )}>
+            <Server className={cn("text-red-400 mx-auto", isSlide ? "w-8 h-8 mb-1" : "w-12 h-12 mb-2")} />
+            <h4 className={cn("font-bold text-white", isSlide ? "text-xs" : "text-sm")}>MIM-DC01</h4>
+            <div className="flex flex-wrap justify-center gap-1 mt-1.5">
+              <span className="text-[8px] bg-slate-700 px-1.5 py-0.5 rounded">AD DS</span>
+              <span className="text-[8px] bg-slate-700 px-1.5 py-0.5 rounded text-red-300 font-bold border border-red-500/30">DHCP</span>
+              <span className="text-[8px] bg-slate-700 px-1.5 py-0.5 rounded text-red-300 font-bold border border-red-500/30">Files</span>
             </div>
           </div>
-          <div className="h-8 w-0.5 bg-red-500/50"></div>
-          <div className="bg-slate-800 border border-slate-600 p-3 rounded-xl w-3/4 text-center">
-            <NetworkIcon className="w-6 h-6 text-slate-400 mx-auto mb-1" />
-            <span className="text-xs text-slate-300">Switch Não Gerenciável</span>
+          <div className={cn("w-0.5 bg-red-500/50", isSlide ? "h-3" : "h-8")}></div>
+          <div className={cn("bg-slate-800 border border-slate-600 rounded-xl w-3/4 text-center", isSlide ? "p-1.5" : "p-3")}>
+            <NetworkIcon className={cn("text-slate-400 mx-auto", isSlide ? "w-4 h-4 mb-0.5" : "w-6 h-6 mb-1")} />
+            <span className={cn("text-slate-300 block", isSlide ? "text-[9px]" : "text-xs")}>Switch Não Gerenciável</span>
           </div>
-          <div className="flex gap-8 w-full justify-center">
-            <div className="h-8 w-0.5 bg-slate-600 rotate-[30deg] translate-x-4"></div>
-            <div className="h-8 w-0.5 bg-slate-600 -rotate-[30deg] -translate-x-4"></div>
+          <div className={cn("flex w-full justify-center", isSlide ? "gap-4" : "gap-8")}>
+            <div className={cn("w-0.5 bg-slate-600 rotate-[30deg] translate-x-2", isSlide ? "h-4" : "h-8")}></div>
+            <div className={cn("w-0.5 bg-slate-600 -rotate-[30deg] -translate-x-2", isSlide ? "h-4" : "h-8")}></div>
           </div>
-          <div className="flex justify-between w-full gap-4">
-            <div className="bg-slate-800/50 border border-slate-700 p-3 rounded-xl flex-1 text-center">
-              <Laptop className="w-8 h-8 text-slate-400 mx-auto mb-1" />
-              <span className="text-[10px] block text-slate-300">Estações (Misturadas)</span>
+          <div className="flex justify-between w-full gap-2">
+            <div className={cn("bg-slate-800/50 border border-slate-700 rounded-xl flex-1 text-center", isSlide ? "p-1.5" : "p-3")}>
+              <Laptop className={cn("text-slate-400 mx-auto", isSlide ? "w-5 h-5 mb-0.5" : "w-8 h-8 mb-1")} />
+              <span className="text-[9px] block text-slate-300">Estações</span>
             </div>
-            <div className="bg-slate-800/50 border border-slate-700 p-3 rounded-xl flex-1 text-center">
-              <Monitor className="w-8 h-8 text-slate-400 mx-auto mb-1" />
-              <span className="text-[10px] block text-slate-300">Câmeras/Imp (IP Dinâmico)</span>
+            <div className={cn("bg-slate-800/50 border border-slate-700 rounded-xl flex-1 text-center", isSlide ? "p-1.5" : "p-3")}>
+              <Monitor className={cn("text-slate-400 mx-auto", isSlide ? "w-5 h-5 mb-0.5" : "w-8 h-8 mb-1")} />
+              <span className="text-[9px] block text-slate-300">Câmeras/Imp</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* DEPOIS */}
-      <div className="bg-green-900/10 border border-green-500/20 rounded-2xl p-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase">
+      <div className={cn(
+        "bg-green-900/10 border border-green-500/20 rounded-2xl relative overflow-hidden flex flex-col",
+        isSlide ? "p-4" : "p-6"
+      )}>
+        <div className="absolute top-0 right-0 bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg uppercase">
           SOLUÇÃO (ALTA DISP. + VLANs)
         </div>
-        <h3 className="text-xl font-bold text-green-400 mb-6 flex items-center gap-2">
-          <Server className="w-5 h-5" /> Arquitetura Nova
+        <h3 className={cn("font-bold text-green-400 flex items-center gap-2", isSlide ? "text-base mb-3" : "text-xl mb-6")}>
+          <Server className={isSlide ? "w-4 h-4" : "w-5 h-5"} /> Arquitetura Nova
         </h3>
         
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex gap-4 w-full">
-            <div className="bg-slate-800 border-2 border-green-500/50 p-4 rounded-xl flex-1 text-center relative shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-              <Server className="w-10 h-10 text-green-400 mx-auto mb-2" />
-              <h4 className="font-bold text-white text-sm">MIM-DC01</h4>
-              <div className="flex flex-wrap justify-center gap-1 mt-2">
-                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">AD DS</span>
-                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">DNS</span>
-                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-blue-300 border border-blue-500/30">DHCP (Active)</span>
+        <div className="flex flex-col items-center justify-center flex-1 gap-2">
+          <div className="flex gap-2 w-full">
+            <div className={cn(
+              "bg-slate-800 border-2 border-green-500/50 rounded-xl flex-1 text-center relative shadow-[0_0_15px_rgba(34,197,94,0.1)]",
+              isSlide ? "p-2" : "p-4"
+            )}>
+              <Server className={cn("text-green-400 mx-auto", isSlide ? "w-6 h-6 mb-1" : "w-10 h-10 mb-2")} />
+              <h4 className={cn("font-bold text-white", isSlide ? "text-[10px]" : "text-sm")}>MIM-DC01</h4>
+              <div className="flex flex-wrap justify-center gap-0.5 mt-1">
+                <span className="text-[7px] bg-slate-700 px-1 py-0.5 rounded">AD/DNS</span>
+                <span className="text-[7px] bg-slate-700 px-1 py-0.5 rounded text-blue-300 border border-blue-500/20">DHCP</span>
               </div>
             </div>
             <div className="flex items-center text-green-500/50">
-              <ArrowRight className="w-6 h-6" />
-              <ArrowRight className="w-6 h-6 rotate-180 -ml-4" />
+              <ArrowRight className={isSlide ? "w-4 h-4" : "w-6 h-6"} />
             </div>
-            <div className="bg-slate-800 border-2 border-green-500/50 p-4 rounded-xl flex-1 text-center relative shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-              <Server className="w-10 h-10 text-green-400 mx-auto mb-2" />
-              <h4 className="font-bold text-white text-sm">MIM-DC02</h4>
-              <div className="flex flex-wrap justify-center gap-1 mt-2">
-                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">AD DS</span>
-                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">DNS</span>
-                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-blue-300 border border-blue-500/30">DHCP (Standby)</span>
-                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-emerald-300 border border-emerald-500/30">File Server</span>
+            <div className={cn(
+              "bg-slate-800 border-2 border-green-500/50 rounded-xl flex-1 text-center relative shadow-[0_0_15px_rgba(34,197,94,0.1)]",
+              isSlide ? "p-2" : "p-4"
+            )}>
+              <Server className={cn("text-green-400 mx-auto", isSlide ? "w-6 h-6 mb-1" : "w-10 h-10 mb-2")} />
+              <h4 className={cn("font-bold text-white", isSlide ? "text-[10px]" : "text-sm")}>MIM-DC02</h4>
+              <div className="flex flex-wrap justify-center gap-0.5 mt-1">
+                <span className="text-[7px] bg-slate-700 px-1 py-0.5 rounded">AD/DNS</span>
+                <span className="text-[7px] bg-slate-700 px-1 py-0.5 rounded text-emerald-300 border border-emerald-500/20">FileSrv</span>
               </div>
             </div>
           </div>
-          <div className="flex gap-16 w-full justify-center">
-            <div className="h-6 w-0.5 bg-green-500/50"></div>
-            <div className="h-6 w-0.5 bg-green-500/50"></div>
+          <div className={cn("flex w-full justify-center", isSlide ? "gap-8 h-3" : "gap-16 h-6")}>
+            <div className="w-0.5 bg-green-500/50"></div>
+            <div className="w-0.5 bg-green-500/50"></div>
           </div>
-          <div className="bg-slate-800 border border-green-500/30 p-3 rounded-xl w-full text-center">
-            <NetworkIcon className="w-6 h-6 text-green-400 mx-auto mb-1" />
-            <span className="text-xs text-slate-300">Switch Gerenciável (VLANs)</span>
+          <div className={cn("bg-slate-800 border border-green-500/30 rounded-xl w-full text-center", isSlide ? "p-1.5" : "p-3")}>
+            <NetworkIcon className={cn("text-green-400 mx-auto", isSlide ? "w-4 h-4 mb-0.5" : "w-6 h-6 mb-1")} />
+            <span className={cn("text-slate-300 block", isSlide ? "text-[9px]" : "text-xs")}>Switch Gerenciável (VLANs)</span>
           </div>
-          <div className="flex gap-12 w-full justify-center">
-            <div className="h-6 w-0.5 bg-slate-600 rotate-[20deg] translate-x-4"></div>
-            <div className="h-6 w-0.5 bg-slate-600 -rotate-[20deg] -translate-x-4"></div>
+          <div className={cn("flex w-full justify-center", isSlide ? "gap-6 h-3" : "gap-12 h-6")}>
+            <div className="w-0.5 bg-slate-600 rotate-[20deg] translate-x-2"></div>
+            <div className="w-0.5 bg-slate-600 -rotate-[20deg] -translate-x-2"></div>
           </div>
-          <div className="flex justify-between w-full gap-4">
-            <div className="bg-slate-800/50 border border-green-500/30 p-3 rounded-xl flex-1 text-center">
-              <Laptop className="w-6 h-6 text-green-400 mx-auto mb-1" />
-              <span className="text-[10px] block text-slate-300">OUs Sede/Depósitos</span>
-              <span className="text-[8px] text-slate-500">GPOs Aplicadas</span>
+          <div className="flex justify-between w-full gap-2">
+            <div className={cn("bg-slate-800/50 border border-green-500/30 rounded-xl flex-1 text-center", isSlide ? "p-1.5" : "p-3")}>
+              <Laptop className={cn("text-green-400 mx-auto", isSlide ? "w-5 h-5 mb-0.5" : "w-6 h-6 mb-1")} />
+              <span className="text-[9px] block text-slate-300">OUs/GPOs</span>
             </div>
-            <div className="bg-slate-800/50 border border-green-500/30 p-3 rounded-xl flex-1 text-center">
-              <Monitor className="w-6 h-6 text-green-400 mx-auto mb-1" />
-              <span className="text-[10px] block text-slate-300">Câmeras/Imp</span>
-              <span className="text-[8px] text-slate-500">Reservas MAC/IP</span>
+            <div className={cn("bg-slate-800/50 border border-green-500/30 rounded-xl flex-1 text-center", isSlide ? "p-1.5" : "p-3")}>
+              <Monitor className={cn("text-green-400 mx-auto", isSlide ? "w-5 h-5 mb-0.5" : "w-6 h-6 mb-1")} />
+              <span className="text-[9px] block text-slate-300">Reservas IP</span>
             </div>
           </div>
         </div>
@@ -1824,16 +1832,21 @@ function SlidesView({ currentSlide, setCurrentSlide, onClose }) {
               )}
 
               {slide.type === 'grid' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {slide.items.map((item, i) => (
-                    <div key={i} className={cn("p-6 bg-slate-800/30 border rounded-2xl transition-all duration-300 flex flex-col h-full", currentTheme.border, currentTheme.cardHover)}>
-                      <h4 className={cn("font-bold mb-2 uppercase text-sm tracking-wider transition-colors duration-500", currentTheme.accent)}>{item.title}</h4>
-                      <p className="text-sm text-slate-300 mb-4 flex-grow">{item.desc}</p>
+                    <div key={i} className={cn(
+                      "p-4 bg-slate-800/30 border rounded-2xl transition-all duration-300 flex flex-col h-full", 
+                      currentTheme.border, 
+                      currentTheme.cardHover,
+                      i >= 3 ? "md:col-span-1" : "" // Mantém 3 colunas
+                    )}>
+                      <h4 className={cn("font-bold mb-1 uppercase text-xs tracking-wider transition-colors duration-500", currentTheme.accent)}>{item.title}</h4>
+                      <p className="text-[11px] leading-relaxed text-slate-300 mb-3 flex-grow">{item.desc}</p>
                       
                       {item.consequence && (
-                        <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
-                          <span className="text-[10px] font-bold text-slate-500 block mb-1 uppercase tracking-wider">Consequência Operacional:</span>
-                          <span className="text-xs text-slate-300 leading-relaxed">{item.consequence}</span>
+                        <div className="bg-slate-950/40 p-3 rounded-xl border border-slate-800/50">
+                          <span className="text-[9px] font-bold text-slate-500 block mb-1 uppercase tracking-wider">Consequência:</span>
+                          <span className="text-[10px] text-slate-300 leading-snug block">{item.consequence}</span>
                         </div>
                       )}
                     </div>
