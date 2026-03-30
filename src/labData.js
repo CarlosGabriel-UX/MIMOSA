@@ -98,6 +98,188 @@ export const labData = {
       backup: ["Backup diário automático", "Regra 3-2-1: 3 cópias, 2 mídias, 1 externa"]
     }
   },
+  slides: [
+    {
+      title: "Reestruturação de Infraestrutura",
+      subtitle: "Case 2 — Empresa Mimosa",
+      type: "intro",
+      content: "Projeto de Modernização, Alta Disponibilidade e Segurança"
+    },
+    {
+      title: "Cenário Atual",
+      subtitle: "Ambiente Crítico e Vulnerável",
+      type: "content",
+      theme: "problem",
+      items: [
+        "Empresa: Mimosa Distribuidora Alimentícia",
+        "35 colaboradores | 2 depósitos + sede",
+        "Operação: 18h/dia",
+        "Dependência total da rede para emissão de notas e estoque",
+        "Ambiente funcional, porém sem planejamento e sem redundância"
+      ]
+    },
+    {
+      title: "Problemas Identificados",
+      subtitle: "Riscos Operacionais Graves",
+      type: "grid",
+      theme: "problem",
+      items: [
+        { 
+          title: "SPOF", 
+          desc: "1 único servidor para todos os serviços (AD, DNS, DHCP, File Server, ERP).",
+          consequence: "Qualquer manutenção ou falha derruba toda a empresa."
+        },
+        { 
+          title: "AD Bagunçado", 
+          desc: "Todos os usuários e computadores soltos nas pastas padrão. Sem OUs.",
+          consequence: "Impossível aplicar políticas de segurança (GPOs) por setor."
+        },
+        { 
+          title: "File Server", 
+          desc: "Pasta única compartilhada sem permissões NTFS ou cotas de disco.",
+          consequence: "Vazamento de dados financeiros e disco lotado com arquivos pessoais."
+        },
+        { 
+          title: "DHCP", 
+          desc: "Distribuição dinâmica para todos, sem reservas para dispositivos fixos.",
+          consequence: "Impressoras e câmeras param de funcionar ao reiniciar."
+        },
+        { 
+          title: "Auditoria", 
+          desc: "Nenhum log de acesso a arquivos ou alterações no AD habilitado.",
+          consequence: "Impossível rastrear a origem de vazamentos de informações."
+        }
+      ]
+    },
+    {
+      title: "Impacto no Negócio",
+      subtitle: "O custo da inércia",
+      type: "list",
+      theme: "problem",
+      items: [
+        "Paradas operacionais frequentes",
+        "Perda de produtividade da equipe",
+        "Risco de vazamento de dados sensíveis",
+        "Falta de controle administrativo centralizado",
+        "Vulnerabilidade total a falhas de hardware"
+      ]
+    },
+    {
+      title: "Topologia de Rede",
+      subtitle: "Antes vs Depois",
+      type: "topology",
+      theme: "default"
+    },
+    {
+      title: "Disponibilidade e Downtime",
+      subtitle: "Impacto Direto na Operação",
+      type: "chart",
+      theme: "solution",
+      data: {
+        before: { label: "Arquitetura Antiga (SPOF)", value: 48, unit: "h/ano", color: "text-red-400", barColor: "bg-red-500", icon: "AlertTriangle" },
+        after: { label: "Nova Arquitetura (Alta Disponibilidade)", value: 2, unit: "h/ano", color: "text-emerald-400", barColor: "bg-emerald-500", icon: "ShieldCheck" },
+        reduction: "95%",
+        description: "A redundância de servidores e o failover de serviços garantem continuidade mesmo em falhas de hardware."
+      }
+    },
+    {
+      title: "Nova Arquitetura Proposta",
+      subtitle: "Alta Disponibilidade e Segurança",
+      type: "content",
+      theme: "solution",
+      items: [
+        "🖥️ 2 Servidores: DC01 (Principal) e DC02 (Redundância/File Server)",
+        "🌐 Rede: Segmentação por VLANs (Sede, Depósitos, Servidores)",
+        "📦 Storage: File Server estruturado com permissões NTFS e Cotas",
+        "🔁 Backup: Estratégia 3-2-1 (Local + Nuvem)",
+        "🔐 Segurança: GPOs restritivas e Auditoria ativa"
+      ]
+    },
+    {
+      title: "Estrutura do Active Directory",
+      subtitle: "Organização Hierárquica (OUs)",
+      type: "code",
+      theme: "solution",
+      content: `ou_mimosa
+├── ou_sede
+│   ├── ou_administrativo (Diretoria)
+│   ├── ou_financeiro
+│   ├── ou_rh
+│   ├── ou_comercial
+│   └── ou_ti
+├── ou_deposito1 (Operação)
+└── ou_deposito2 (Operação)`
+    },
+    {
+      title: "Políticas de Grupo (GPOs)",
+      subtitle: "Controle por Setor",
+      type: "list",
+      theme: "solution",
+      items: [
+        "👔 Diretoria: Acesso total e sem restrições",
+        "💰 Financeiro/RH: Bloqueio USB, acesso externo restrito, auditoria",
+        "📦 Operação: Bloqueio de Painel de Controle e rede manual",
+        "💻 TI: Controle total e acesso administrativo"
+      ]
+    },
+    {
+      title: "File Server e DHCP",
+      subtitle: "Organização e Estabilidade",
+      type: "content",
+      theme: "solution",
+      items: [
+        "📂 File Server: Pastas separadas por grupo com Shadow Copy",
+        "🔌 DHCP: Reservas fixas para Impressoras, Câmeras e Servidores",
+        "⚡ Failover: DHCP em modo Hot Standby entre DC01 e DC02",
+        "🔍 ABE: Usuários só veem as pastas que têm acesso"
+      ]
+    },
+    {
+      title: "Auditoria e Backup",
+      subtitle: "Conformidade e Continuidade",
+      type: "grid",
+      theme: "solution",
+      items: [
+        { title: "Auditoria", desc: "Rastreio de logon, acesso a arquivos e alterações AD." },
+        { title: "Rastreio", desc: "Investigação rápida de incidentes e vazamentos." },
+        { title: "Backup", desc: "3 cópias, 2 mídias diferentes, 1 cópia externa." },
+        { title: "Restore", desc: "Testes periódicos de recuperação de desastres." }
+      ]
+    },
+    {
+      title: "SPOF e Mitigação",
+      subtitle: "Segurança Além da Redundância",
+      type: "content",
+      theme: "solution",
+      items: [
+        "⚠️ SPOF: Reduzido com DC02, mas risco residual existe (Energia, Switch)",
+        "🔋 Mitigação: Nobreak (UPS) senoidal e RAID (1/10)",
+        "💾 Backup: Regra 3-2-1 com teste de restore semanal",
+        "🔍 Monitoramento: Logs e alertas de saúde dos servidores",
+        "📄 Documentação: Manter topologia e IPs sempre atualizados"
+      ]
+    },
+    {
+      title: "Plano de Implementação",
+      subtitle: "Fases do Projeto",
+      type: "list",
+      theme: "solution",
+      items: [
+        "Fase 1: Levantamento e Planejamento (Janelas de Manutenção)",
+        "Fase 2: Infraestrutura (Instalação dos Servidores DC01/DC02)",
+        "Fase 3: Active Directory (OUs, Grupos e GPOs)",
+        "Fase 4: File Server (Migração e Permissões)",
+        "Fase 5: Rede (VLANs, DHCP e Reservas)",
+        "Fase 6: Segurança e Backup (Auditoria e Automação)"
+      ]
+    },
+    {
+      title: "Obrigado!",
+      subtitle: "Conclusão",
+      type: "intro",
+      content: "Perguntas? Dúvidas? Vamos ao Lab!"
+    }
+  ],
   network: {
     subnet: "VLAN10 Servidores: 192.168.10.0/24 | VLAN20 Sede: 192.168.20.0/24 | VLAN30 Dep1: 192.168.30.0/24 | VLAN40 Dep2: 192.168.40.0/24 | VLAN50 Dispositivos: 192.168.50.0/24",
     gateway: "Inter-VLAN: 192.168.10.1 / 20.1 / 30.1 / 40.1 / 50.1",

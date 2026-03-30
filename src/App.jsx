@@ -34,7 +34,8 @@ import {
   ShieldCheck,
   Users,
   FolderTree,
-  Lock
+  Lock,
+  Presentation
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -45,6 +46,116 @@ import { Toaster, toast } from 'sonner';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
+}
+
+function TopologyDiagram({ isSlide = false }) {
+  return (
+    <div className={cn("grid gap-8", isSlide ? "md:grid-cols-2" : "md:grid-cols-2")}>
+      {/* ANTES */}
+      <div className="bg-red-900/10 border border-red-500/20 rounded-2xl p-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase">
+          PROBLEMA (SPOF)
+        </div>
+        <h3 className="text-xl font-bold text-red-400 mb-6 flex items-center gap-2">
+          <Server className="w-5 h-5" /> Arquitetura Antiga
+        </h3>
+        
+        <div className="flex flex-col items-center gap-4">
+          <div className="bg-slate-800 border-2 border-red-500/50 p-4 rounded-xl w-full text-center relative shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+            <Server className="w-12 h-12 text-red-400 mx-auto mb-2" />
+            <h4 className="font-bold text-white">MIM-DC01</h4>
+            <div className="flex flex-wrap justify-center gap-2 mt-3">
+              <span className="text-[10px] bg-slate-700 px-2 py-1 rounded">AD DS</span>
+              <span className="text-[10px] bg-slate-700 px-2 py-1 rounded">DNS</span>
+              <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-red-300 font-bold border border-red-500/30">DHCP (Único)</span>
+              <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-red-300 font-bold border border-red-500/30">File Server (Bagunçado)</span>
+            </div>
+          </div>
+          <div className="h-8 w-0.5 bg-red-500/50"></div>
+          <div className="bg-slate-800 border border-slate-600 p-3 rounded-xl w-3/4 text-center">
+            <NetworkIcon className="w-6 h-6 text-slate-400 mx-auto mb-1" />
+            <span className="text-xs text-slate-300">Switch Não Gerenciável</span>
+          </div>
+          <div className="flex gap-8 w-full justify-center">
+            <div className="h-8 w-0.5 bg-slate-600 rotate-[30deg] translate-x-4"></div>
+            <div className="h-8 w-0.5 bg-slate-600 -rotate-[30deg] -translate-x-4"></div>
+          </div>
+          <div className="flex justify-between w-full gap-4">
+            <div className="bg-slate-800/50 border border-slate-700 p-3 rounded-xl flex-1 text-center">
+              <Laptop className="w-8 h-8 text-slate-400 mx-auto mb-1" />
+              <span className="text-[10px] block text-slate-300">Estações (Misturadas)</span>
+            </div>
+            <div className="bg-slate-800/50 border border-slate-700 p-3 rounded-xl flex-1 text-center">
+              <Monitor className="w-8 h-8 text-slate-400 mx-auto mb-1" />
+              <span className="text-[10px] block text-slate-300">Câmeras/Imp (IP Dinâmico)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* DEPOIS */}
+      <div className="bg-green-900/10 border border-green-500/20 rounded-2xl p-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase">
+          SOLUÇÃO (ALTA DISP. + VLANs)
+        </div>
+        <h3 className="text-xl font-bold text-green-400 mb-6 flex items-center gap-2">
+          <Server className="w-5 h-5" /> Arquitetura Nova
+        </h3>
+        
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex gap-4 w-full">
+            <div className="bg-slate-800 border-2 border-green-500/50 p-4 rounded-xl flex-1 text-center relative shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+              <Server className="w-10 h-10 text-green-400 mx-auto mb-2" />
+              <h4 className="font-bold text-white text-sm">MIM-DC01</h4>
+              <div className="flex flex-wrap justify-center gap-1 mt-2">
+                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">AD DS</span>
+                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">DNS</span>
+                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-blue-300 border border-blue-500/30">DHCP (Active)</span>
+              </div>
+            </div>
+            <div className="flex items-center text-green-500/50">
+              <ArrowRight className="w-6 h-6" />
+              <ArrowRight className="w-6 h-6 rotate-180 -ml-4" />
+            </div>
+            <div className="bg-slate-800 border-2 border-green-500/50 p-4 rounded-xl flex-1 text-center relative shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+              <Server className="w-10 h-10 text-green-400 mx-auto mb-2" />
+              <h4 className="font-bold text-white text-sm">MIM-DC02</h4>
+              <div className="flex flex-wrap justify-center gap-1 mt-2">
+                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">AD DS</span>
+                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">DNS</span>
+                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-blue-300 border border-blue-500/30">DHCP (Standby)</span>
+                <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-emerald-300 border border-emerald-500/30">File Server</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-16 w-full justify-center">
+            <div className="h-6 w-0.5 bg-green-500/50"></div>
+            <div className="h-6 w-0.5 bg-green-500/50"></div>
+          </div>
+          <div className="bg-slate-800 border border-green-500/30 p-3 rounded-xl w-full text-center">
+            <NetworkIcon className="w-6 h-6 text-green-400 mx-auto mb-1" />
+            <span className="text-xs text-slate-300">Switch Gerenciável (VLANs)</span>
+          </div>
+          <div className="flex gap-12 w-full justify-center">
+            <div className="h-6 w-0.5 bg-slate-600 rotate-[20deg] translate-x-4"></div>
+            <div className="h-6 w-0.5 bg-slate-600 -rotate-[20deg] -translate-x-4"></div>
+          </div>
+          <div className="flex justify-between w-full gap-4">
+            <div className="bg-slate-800/50 border border-green-500/30 p-3 rounded-xl flex-1 text-center">
+              <Laptop className="w-6 h-6 text-green-400 mx-auto mb-1" />
+              <span className="text-[10px] block text-slate-300">OUs Sede/Depósitos</span>
+              <span className="text-[8px] text-slate-500">GPOs Aplicadas</span>
+            </div>
+            <div className="bg-slate-800/50 border border-green-500/30 p-3 rounded-xl flex-1 text-center">
+              <Monitor className="w-6 h-6 text-green-400 mx-auto mb-1" />
+              <span className="text-[10px] block text-slate-300">Câmeras/Imp</span>
+              <span className="text-[8px] text-slate-500">Reservas MAC/IP</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function App() {
@@ -60,6 +171,8 @@ function App() {
   const [showDiagram, setShowDiagram] = useState(false);
   const [showOverview, setShowOverview] = useState(true); // New state for Executive Overview
   const [showSheets, setShowSheets] = useState(false);
+  const [showSlides, setShowSlides] = useState(false); // New state for Slides
+  const [currentSlide, setCurrentSlide] = useState(0); // Current slide index
   const [activeSheet, setActiveSheet] = useState('ips'); // 'ips' | 'users'
   const [sheetQuery, setSheetQuery] = useState('');
   const [activeDeviceModal, setActiveDeviceModal] = useState(null); // 'old-stations', 'old-devices', 'new-stations', 'new-devices'
@@ -294,6 +407,17 @@ function App() {
         )}
       </AnimatePresence>
 
+      {/* Slides Modal */}
+      <AnimatePresence>
+        {showSlides && (
+          <SlidesView 
+            currentSlide={currentSlide} 
+            setCurrentSlide={setCurrentSlide} 
+            onClose={() => setShowSlides(false)} 
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <AnimatePresence mode='wait'>
         {isSidebarOpen && (
@@ -363,6 +487,35 @@ function App() {
                   <div className="flex-1 min-w-0">
                     <span className="block text-sm font-medium truncate">Visão Executiva</span>
                     <span className="text-[10px] opacity-70">O problema e a solução</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setShowSlides(true);
+                    setShowOverview(false);
+                    setShowDiagram(false);
+                    setShowEquipments(false);
+                    setShowSheets(false);
+                    setCurrentSlide(0);
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden mt-2",
+                    showSlides 
+                      ? "bg-indigo-600 shadow-lg shadow-indigo-500/20 text-white" 
+                      : "hover:bg-slate-700/50 text-slate-400 hover:text-slate-200"
+                  )}
+                >
+                  <div className={cn(
+                    "p-2 rounded-lg transition-colors",
+                    showSlides ? "bg-white/20" : "bg-slate-800 group-hover:bg-slate-700"
+                  )}>
+                    <Presentation className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-sm font-medium truncate">Apresentação</span>
+                    <span className="text-[10px] opacity-70">Slides do Projeto</span>
                   </div>
                 </button>
               </div>
@@ -1066,139 +1219,7 @@ function App() {
                   </button>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8">
-                  {/* ANTES */}
-                  <div className="bg-red-900/10 border border-red-500/20 rounded-2xl p-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                      PROBLEMA (SPOF)
-                    </div>
-                    <h3 className="text-xl font-bold text-red-400 mb-6 flex items-center gap-2">
-                      <Server className="w-5 h-5" /> Arquitetura Antiga
-                    </h3>
-                    
-                    <div className="flex flex-col items-center gap-4">
-                      {/* Único Servidor */}
-                      <div className="bg-slate-800 border-2 border-red-500/50 p-4 rounded-xl w-full text-center relative shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-                        <Server className="w-12 h-12 text-red-400 mx-auto mb-2" />
-                        <h4 className="font-bold text-white">MIM-DC01</h4>
-                        <div className="flex flex-wrap justify-center gap-2 mt-3">
-                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded">AD DS</span>
-                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded">DNS</span>
-                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-red-300 font-bold border border-red-500/30">DHCP (Único)</span>
-                          <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-red-300 font-bold border border-red-500/30">File Server (Bagunçado)</span>
-                        </div>
-                      </div>
-
-                      <div className="h-8 w-0.5 bg-red-500/50"></div>
-
-                      {/* Switch Unico */}
-                      <div className="bg-slate-800 border border-slate-600 p-3 rounded-xl w-3/4 text-center">
-                        <NetworkIcon className="w-6 h-6 text-slate-400 mx-auto mb-1" />
-                        <span className="text-xs text-slate-300">Switch Não Gerenciável</span>
-                      </div>
-
-                      <div className="flex gap-8 w-full justify-center">
-                        <div className="h-8 w-0.5 bg-slate-600 rotate-[30deg] translate-x-4"></div>
-                        <div className="h-8 w-0.5 bg-slate-600 -rotate-[30deg] -translate-x-4"></div>
-                      </div>
-
-                      {/* Clientes */}
-                      <div className="flex justify-between w-full gap-4">
-                        <button 
-                          onClick={() => setActiveDeviceModal('old-stations')}
-                          className="bg-slate-800/50 border border-slate-700 p-3 rounded-xl flex-1 text-center hover:bg-slate-700/50 hover:border-slate-500 transition-all cursor-pointer"
-                        >
-                          <Laptop className="w-8 h-8 text-slate-400 mx-auto mb-1" />
-                          <span className="text-[10px] block text-slate-300">Estações (Misturadas)</span>
-                        </button>
-                        <button 
-                          onClick={() => setActiveDeviceModal('old-devices')}
-                          className="bg-slate-800/50 border border-slate-700 p-3 rounded-xl flex-1 text-center hover:bg-slate-700/50 hover:border-slate-500 transition-all cursor-pointer"
-                        >
-                          <Monitor className="w-8 h-8 text-slate-400 mx-auto mb-1" />
-                          <span className="text-[10px] block text-slate-300">Câmeras/Imp (IP Dinâmico)</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* DEPOIS */}
-                  <div className="bg-green-900/10 border border-green-500/20 rounded-2xl p-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                      SOLUÇÃO (ALTA DISP. + VLANs)
-                    </div>
-                    <h3 className="text-xl font-bold text-green-400 mb-6 flex items-center gap-2">
-                      <Server className="w-5 h-5" /> Arquitetura Nova
-                    </h3>
-                    
-                    <div className="flex flex-col items-center gap-4">
-                      {/* Dois Servidores */}
-                      <div className="flex gap-4 w-full">
-                        <div className="bg-slate-800 border-2 border-green-500/50 p-4 rounded-xl flex-1 text-center relative shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-                          <Server className="w-10 h-10 text-green-400 mx-auto mb-2" />
-                          <h4 className="font-bold text-white text-sm">MIM-DC01</h4>
-                          <div className="flex flex-wrap justify-center gap-1 mt-2">
-                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">AD DS</span>
-                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">DNS</span>
-                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-blue-300 border border-blue-500/30">DHCP (Active)</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center text-green-500/50">
-                          <ArrowRight className="w-6 h-6" />
-                          <ArrowRight className="w-6 h-6 rotate-180 -ml-4" />
-                        </div>
-
-                        <div className="bg-slate-800 border-2 border-green-500/50 p-4 rounded-xl flex-1 text-center relative shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-                          <Server className="w-10 h-10 text-green-400 mx-auto mb-2" />
-                          <h4 className="font-bold text-white text-sm">MIM-DC02</h4>
-                          <div className="flex flex-wrap justify-center gap-1 mt-2">
-                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">AD DS</span>
-                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded">DNS</span>
-                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-blue-300 border border-blue-500/30">DHCP (Standby)</span>
-                            <span className="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded text-emerald-300 border border-emerald-500/30">File Server</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-16 w-full justify-center">
-                        <div className="h-6 w-0.5 bg-green-500/50"></div>
-                        <div className="h-6 w-0.5 bg-green-500/50"></div>
-                      </div>
-
-                      {/* Switch Gerenciável */}
-                      <div className="bg-slate-800 border border-green-500/30 p-3 rounded-xl w-full text-center">
-                        <NetworkIcon className="w-6 h-6 text-green-400 mx-auto mb-1" />
-                        <span className="text-xs text-slate-300">Switch Gerenciável (VLANs: Servidores / Sede / Dep1 / Dep2 / Dispositivos)</span>
-                      </div>
-
-                      <div className="flex gap-12 w-full justify-center">
-                        <div className="h-6 w-0.5 bg-slate-600 rotate-[20deg] translate-x-4"></div>
-                        <div className="h-6 w-0.5 bg-slate-600 -rotate-[20deg] -translate-x-4"></div>
-                      </div>
-
-                      {/* Clientes Organizados */}
-                      <div className="flex justify-between w-full gap-4">
-                        <button 
-                          onClick={() => setActiveDeviceModal('new-stations')}
-                          className="bg-slate-800/50 border border-green-500/30 p-3 rounded-xl flex-1 text-center hover:bg-slate-700/50 hover:border-green-500/60 transition-all cursor-pointer"
-                        >
-                          <Laptop className="w-6 h-6 text-green-400 mx-auto mb-1" />
-                          <span className="text-[10px] block text-slate-300">OUs Sede/Depósitos</span>
-                          <span className="text-[8px] text-slate-500">GPOs Aplicadas</span>
-                        </button>
-                        <button 
-                          onClick={() => setActiveDeviceModal('new-devices')}
-                          className="bg-slate-800/50 border border-green-500/30 p-3 rounded-xl flex-1 text-center hover:bg-slate-700/50 hover:border-green-500/60 transition-all cursor-pointer"
-                        >
-                          <Monitor className="w-6 h-6 text-green-400 mx-auto mb-1" />
-                          <span className="text-[10px] block text-slate-300">Câmeras/Imp</span>
-                          <span className="text-[8px] text-slate-500">Reservas MAC/IP</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <TopologyDiagram />
               </motion.div>
             ) : showEquipments ? (
               <motion.div
@@ -1631,6 +1652,367 @@ function App() {
             )))}
           </div>
         </main>
+      </div>
+    </div>
+  );
+}
+
+function SlidesView({ currentSlide, setCurrentSlide, onClose }) {
+  const slides = labData.slides;
+  const slide = slides[currentSlide];
+
+  const nextSlide = () => {
+    if (currentSlide < slides.length - 1) setCurrentSlide(currentSlide + 1);
+  };
+
+  const prevSlide = () => {
+    if (currentSlide > 0) setCurrentSlide(currentSlide - 1);
+  };
+
+  const themeColors = {
+    problem: {
+      accent: "text-red-400",
+      bg: "bg-red-500/10",
+      border: "border-red-500/30",
+      glow: "bg-red-600/5",
+      bullet: "bg-red-500",
+      number: "bg-red-500/20 text-red-400",
+      cardHover: "hover:border-red-500/50"
+    },
+    solution: {
+      accent: "text-emerald-400",
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-500/30",
+      glow: "bg-emerald-600/5",
+      bullet: "bg-emerald-500",
+      number: "bg-emerald-500/20 text-emerald-400",
+      cardHover: "hover:border-emerald-500/50"
+    },
+    default: {
+      accent: "text-indigo-400",
+      bg: "bg-indigo-500/10",
+      border: "border-indigo-500/30",
+      glow: "bg-indigo-600/5",
+      bullet: "bg-indigo-500",
+      number: "bg-indigo-500/20 text-indigo-400",
+      cardHover: "hover:border-indigo-500/50"
+    }
+  };
+
+  const currentTheme = themeColors[slide.theme] || themeColors.default;
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentSlide]);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-slate-950 flex flex-col font-sans">
+      {/* Slide Header */}
+      <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/80 backdrop-blur-md z-10">
+        <div className="flex items-center gap-4">
+          <div className={cn("p-2 rounded-lg transition-colors duration-500", currentTheme.bg)}>
+            <Presentation className={cn("w-5 h-5 transition-colors duration-500", currentTheme.accent)} />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] block">Projeto Mimosa</span>
+            <span className="text-sm font-medium text-slate-200">Apresentação Executiva</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={toggleFullscreen}
+            className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2 text-xs font-bold"
+            title="Tela Cheia"
+          >
+            <Monitor className="w-4 h-4" />
+            <span className="hidden md:inline">TELA CHEIA</span>
+          </button>
+          <div className="w-px h-4 bg-slate-800 mx-2" />
+          <button 
+            onClick={onClose}
+            className="p-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg text-slate-400 transition-all"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      {/* Slide Content */}
+      <div className="flex-1 flex items-center justify-center p-4 md:p-12 overflow-hidden relative">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0, y: 30, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -30, scale: 0.98 }}
+            transition={{ 
+              type: "spring",
+              stiffness: 100,
+              damping: 20,
+              duration: 0.5 
+            }}
+            className={cn(
+              "w-full max-w-6xl aspect-video bg-slate-900/50 border rounded-[2.5rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col p-12 md:p-16 relative backdrop-blur-sm transition-colors duration-500",
+              currentTheme.border
+            )}
+          >
+            {/* Background Accent */}
+            <div className={cn("absolute -top-24 -right-24 w-1/2 h-1/2 rounded-full blur-[120px] opacity-20 transition-colors duration-700", currentTheme.glow)} />
+            <div className={cn("absolute -bottom-24 -left-24 w-1/2 h-1/2 rounded-full blur-[120px] opacity-20 transition-colors duration-700", currentTheme.glow)} />
+
+            <div className="mb-auto">
+              <span className={cn("font-bold tracking-[0.2em] text-sm mb-4 block uppercase transition-colors duration-500", currentTheme.accent)}>
+                {slide.subtitle}
+              </span>
+              <h2 className={cn(
+                "font-bold text-white leading-tight",
+                slide.type === 'intro' ? "text-5xl md:text-7xl mb-8" : "text-4xl md:text-5xl mb-12"
+              )}>
+                {slide.title}
+              </h2>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+              {slide.type === 'intro' && (
+                <p className="text-2xl text-slate-400 max-w-2xl font-light leading-relaxed italic">
+                  "{slide.content}"
+                </p>
+              )}
+
+              {slide.type === 'content' && (
+                <ul className="space-y-4">
+                  {slide.items.map((item, i) => (
+                    <li key={i} className="flex items-center gap-4 text-lg md:text-xl text-slate-300">
+                      <div className={cn("w-2 h-2 rounded-full shrink-0 transition-colors duration-500", currentTheme.bullet)} />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {slide.type === 'list' && (
+                <div className={cn(
+                  "grid gap-4",
+                  slide.items.length > 4 ? "md:grid-cols-2" : "grid-cols-1"
+                )}>
+                  {slide.items.map((item, i) => (
+                    <div key={i} className={cn("flex items-center gap-4 p-4 md:p-5 bg-slate-800/30 border rounded-2xl transition-all duration-300", currentTheme.border, currentTheme.cardHover)}>
+                      <div className={cn("w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold shrink-0 text-sm md:text-base transition-colors duration-500", currentTheme.number)}>
+                        {i + 1}
+                      </div>
+                      <span className="text-base md:text-lg text-slate-200">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {slide.type === 'grid' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {slide.items.map((item, i) => (
+                    <div key={i} className={cn("p-6 bg-slate-800/30 border rounded-2xl transition-all duration-300 flex flex-col h-full", currentTheme.border, currentTheme.cardHover)}>
+                      <h4 className={cn("font-bold mb-2 uppercase text-sm tracking-wider transition-colors duration-500", currentTheme.accent)}>{item.title}</h4>
+                      <p className="text-sm text-slate-300 mb-4 flex-grow">{item.desc}</p>
+                      
+                      {item.consequence && (
+                        <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
+                          <span className="text-[10px] font-bold text-slate-500 block mb-1 uppercase tracking-wider">Consequência Operacional:</span>
+                          <span className="text-xs text-slate-300 leading-relaxed">{item.consequence}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {slide.type === 'topology' && (
+                <div className="h-full flex items-center">
+                  <TopologyDiagram isSlide={true} />
+                </div>
+              )}
+
+              {slide.type === 'chart' && (
+                <div className="h-full flex flex-col justify-center gap-12">
+                  <div className="grid md:grid-cols-2 gap-12 items-end">
+                    {/* Before Bar */}
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-slate-400 font-bold text-sm uppercase tracking-wider">{slide.data.before.label}</span>
+                        <span className={cn("text-3xl font-black", slide.data.before.color)}>
+                          {slide.data.before.value} <span className="text-sm font-normal opacity-50">{slide.data.before.unit}</span>
+                        </span>
+                      </div>
+                      <div className="h-24 bg-slate-800 rounded-2xl overflow-hidden relative border border-slate-700/50">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: "100%" }}
+                          transition={{ duration: 1, delay: 0.5 }}
+                          className={cn("h-full opacity-30", slide.data.before.barColor)}
+                        />
+                        <div className="absolute inset-0 flex items-center px-6">
+                          <AlertTriangle className={cn("w-10 h-10", slide.data.before.color)} />
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium">Tempo médio de parada anual (Downtime)</p>
+                    </div>
+
+                    {/* After Bar */}
+                    <div className="space-y-4 relative">
+                      <div className="absolute -top-16 -right-4 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-2xl animate-bounce">
+                        <span className="text-2xl font-black italic">-{slide.data.reduction}</span>
+                        <span className="text-[10px] block font-bold">REDUÇÃO DE RISCO</span>
+                      </div>
+
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-slate-400 font-bold text-sm uppercase tracking-wider">{slide.data.after.label}</span>
+                        <span className={cn("text-3xl font-black", slide.data.after.color)}>
+                          {slide.data.after.value} <span className="text-sm font-normal opacity-50">{slide.data.after.unit}</span>
+                        </span>
+                      </div>
+                      <div className="h-24 bg-slate-800 rounded-2xl overflow-hidden relative border border-slate-700/50">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: "4%" }}
+                          transition={{ duration: 1, delay: 0.8 }}
+                          className={cn("h-full", slide.data.after.barColor)}
+                        />
+                        <div className="absolute inset-0 flex items-center px-6">
+                          <ShieldCheck className={cn("w-10 h-10", slide.data.after.color)} />
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium">Paradas planejadas residuais</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/30 border border-slate-700/50 p-6 rounded-3xl backdrop-blur-sm">
+                    <div className="flex gap-4 items-start">
+                      <div className="p-3 bg-indigo-500/20 rounded-2xl border border-indigo-500/30">
+                        <TrendingDown className="w-6 h-6 text-indigo-400" />
+                      </div>
+                      <p className="text-lg text-slate-300 leading-relaxed italic">
+                        "{slide.data.description}"
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {slide.type === 'code' && (
+                <div className="rounded-2xl overflow-hidden border border-slate-700/50 shadow-inner h-full">
+                  <SyntaxHighlighter
+                    language="text"
+                    style={vscDarkPlus}
+                    customStyle={{ 
+                      margin: 0, 
+                      padding: '2rem', 
+                      background: '#020617', 
+                      fontSize: '1.1rem',
+                      height: '100%',
+                      lineHeight: '1.6'
+                    }}
+                  >
+                    {slide.content}
+                  </SyntaxHighlighter>
+                </div>
+              )}
+            </div>
+
+            {/* Slide Number */}
+            <div className="absolute bottom-12 right-12 text-slate-600 font-mono text-sm">
+              {currentSlide + 1} / {slides.length}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Controls Overlay */}
+        <div className="absolute inset-y-0 left-0 flex items-center p-4">
+          <button 
+            onClick={prevSlide}
+            disabled={currentSlide === 0}
+            className="p-4 bg-slate-900/50 hover:bg-slate-800 border border-slate-800 rounded-full text-white transition-all disabled:opacity-0"
+          >
+            <ChevronRight className="w-8 h-8 rotate-180" />
+          </button>
+        </div>
+        <div className="absolute inset-y-0 right-0 flex items-center p-4">
+          <button 
+            onClick={nextSlide}
+            disabled={currentSlide === slides.length - 1}
+            className="p-4 bg-indigo-600 hover:bg-indigo-500 border border-indigo-500 rounded-full text-white shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-0"
+          >
+            <ChevronRight className="w-8 h-8" />
+          </button>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="h-1 bg-slate-800 w-full overflow-hidden">
+        <motion.div 
+          className="h-full bg-indigo-500"
+          initial={{ width: 0 }}
+          animate={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }}
+        />
+      </div>
+
+      {/* Thumbnails Footer */}
+      <div className="p-4 bg-slate-900/80 border-t border-slate-800 flex items-center justify-between px-8 backdrop-blur-md">
+        <div className="flex-1 flex items-center gap-4">
+          <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold tracking-wider">
+            <div className="flex gap-1">
+              <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700">←</kbd>
+              <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700">→</kbd>
+            </div>
+            <span>NAVEGAR</span>
+          </div>
+          <div className="w-px h-3 bg-slate-800" />
+          <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold tracking-wider">
+            <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700">ESC</kbd>
+            <span>SAIR</span>
+          </div>
+        </div>
+        
+        <div className="flex gap-2 overflow-x-auto scrollbar-none justify-center flex-1">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentSlide(i)}
+              className={cn(
+                "w-2.5 h-2.5 rounded-full transition-all duration-300",
+                currentSlide === i 
+                  ? cn("w-8", currentTheme.bullet.replace('bg-', 'bg-')) 
+                  : "bg-slate-700 hover:bg-slate-600"
+              )}
+            />
+          ))}
+        </div>
+
+        <div className="flex-1 flex justify-end items-center gap-4">
+          <div className="text-slate-500 font-mono text-xs font-bold">
+            {String(currentSlide + 1).padStart(2, '0')} <span className="text-slate-800">/</span> {String(slides.length).padStart(2, '0')}
+          </div>
+          <button 
+            onClick={onClose}
+            className="text-[10px] font-bold text-slate-500 hover:text-white transition-all uppercase tracking-[0.2em] bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-500"
+          >
+            Encerrar
+          </button>
+        </div>
       </div>
     </div>
   );
